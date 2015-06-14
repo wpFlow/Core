@@ -1,0 +1,28 @@
+{
+  "name": "wpFlow/Configuration",
+  "type": "Library",
+  "license": "MIT",
+  "description": "wpFlow Framwork Package for handling configs",
+  "homepage": "https://vectoholic.de",
+  "authors": [
+    {
+      "name": "Dennis Schröder",
+      "email": "info@vectoholic.com",
+      "homepage": "https://github.com/vectohlic"
+    }
+  ],
+  "keywords": [
+    "vectoholic", "wpFlow", "wordpress", "Framework-Package", "composer", "vagrant", "wp", "Framework", "OOP","Configurations"
+  ],
+  "support": {
+    "issues": "https://github.com/wpFlow/Configuration/issues"
+  },
+  
+  "require": {
+    "php": ">=5.5",
+    "composer/installers": "~1.0.12",
+	 "symfony/yaml": "2.7.0",
+	 "symfony/config": "2.7.0",
+	 "symfony/property-access": "2.7.0"
+  }
+}
