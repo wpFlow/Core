@@ -1,5 +1,5 @@
 {
-  "name": "wpFlow/Configuration",
+  "name": "wpFlow/Core",
   "type": "Library",
   "license": "MIT",
   "description": "wpFlow Framwork Package for handling configs",
@@ -15,7 +15,7 @@
     "vectoholic", "wpFlow", "wordpress", "Framework-Package", "composer", "vagrant", "wp", "Framework", "OOP","Configurations"
   ],
   "support": {
-    "issues": "https://github.com/wpFlow/Configuration/issues"
+    "issues": "https://github.com/wpFlow/Core/issues"
   },
   
   "require": {
@@ -23,6 +23,7 @@
     "composer/installers": "~1.0.12",
 	 "symfony/yaml": "2.7.0",
 	 "symfony/config": "2.7.0",
-	 "symfony/property-access": "2.7.0"
+	 "symfony/property-access": "2.7.0",
+    "symfony/dependency-injection": "2.7.0"
   }
 }
