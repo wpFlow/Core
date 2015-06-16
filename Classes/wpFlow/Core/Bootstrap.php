@@ -8,6 +8,8 @@
 
 namespace wpFlow\Core;
 
+use wpFlow\Configuration\DatabaseConfigToCache;
+
 include_once('ApplicationContext.php');
 
 
@@ -22,6 +24,10 @@ class Bootstrap {
     static protected $instance = null;
 
     protected $context;
+
+    protected $fileLocaterPath;
+
+    protected $PackageMap;
 
     static public function getInstance($context)
       {
@@ -39,8 +45,9 @@ class Bootstrap {
     public function __construct($context) {
         $this->defineConstants();
         $this->ensureRequiredEnvironment();
-
         $this->context = new ApplicationContext($context);
+        $this->registerServiceContainer();
+        $this->fireUpConfigCache();
     }
 
     /**
@@ -214,7 +221,45 @@ class Bootstrap {
         return NULL;
     }
 
+    /**
+     * Register the Service Container for DependencyInjection
+     * It´ possible to add different Services for the contexts
+     * @return void
+     */
+    protected function registerServiceContainer(){
+
+        if($this->context->isDevelopment()) {
+            $this->fileLocaterPath = WPFLOW_PATH_PACKAGES . 'Framework/wpFlow.Core/Configuration/Development';
+        } else if($this->context->isProduction()) {
+            $this->fileLocaterPath = WPFLOW_PATH_PACKAGES . 'Framework/wpFlow.Core/Configuration/Production';
+        } else if($this->context->isTesting()){
+            $this->fileLocaterPath = WPFLOW_PATH_PACKAGES . 'Framework/wpFlow.Core/Configuration/Testing';
+        }
+
+        $ServiceContainer = new ServiceContainer($this->fileLocaterPath);
+    }
+
+    protected function fireUpConfigCache(){
+
+        $cachePath = WPFLOW_PATH_ROOT . 'Data/'. $this->context->getContextString() . '/Config.php';
+        $configFile = 'Config.yaml';
+        $scanDirs = array(WPFLOW_PATH_ROOT . 'Configuration', WPFLOW_PATH_PACKAGES . 'Framework/wpFlow.Configuration/Configuration' );
+
+        $cache = new DatabaseConfigToCache($cachePath,$configFile,$scanDirs);
+        $cache->writeConfigToCache();
+
+    }
+
+
     public function run(){
 
+    }
+
+    /**
+     * @param array $PackageMap
+     */
+    public function setPackageMap($PackageMap)
+    {
+        $this->PackageMap = $PackageMap;
     }
 }

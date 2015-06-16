@@ -125,4 +125,14 @@ class ApplicationContext {
     public function getParent() {
         return $this->parentContext;
     }
+
+    /**
+     * @return string
+     */
+    public function getContextString()
+    {
+        return $this->contextString;
+    }
+
+
 }
