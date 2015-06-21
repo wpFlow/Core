@@ -8,7 +8,10 @@
 
 namespace wpFlow\Core;
 
+use Symfony\Component\DependencyInjection\Container;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use wpFlow\Configuration\DatabaseConfigToCache;
+use wpFlow\Core\Booting\Scripts;
 
 include_once('ApplicationContext.php');
 
@@ -27,9 +30,9 @@ class Bootstrap {
 
     protected $fileLocaterPath;
 
-    protected $PackageMap;
+    protected $Packages;
 
-    static public function getInstance($context)
+    static public function boot($context)
       {
          if (null === self::$instance) {
              self::$instance = new self($context);
@@ -51,7 +54,7 @@ class Bootstrap {
     }
 
     /**
-     * Defines various path constants used by Flow and if no root path or web root was
+     * Defines various path constants used by wpFlow and if no root path or web root was
      * specified by an environment variable, exits with a respective error message.
      *
      * @return void
@@ -79,6 +82,9 @@ class Bootstrap {
 
         define('WP_HOME', "http://localhost:8080/");
         define('WP_SITEURL', 'http://localhost:8080/wp-core/');
+
+        /** Language Settings */
+        define ('WPLANG', 'de_DE');
 
         /** Custom Content Directory */
         define('WP_CONTENT_DIR', WPFLOW_WEBPATH_ROOT .  'app-content');
@@ -236,7 +242,6 @@ class Bootstrap {
             $this->fileLocaterPath = WPFLOW_PATH_PACKAGES . 'Framework/wpFlow.Core/Configuration/Testing';
         }
 
-        $ServiceContainer = new ServiceContainer($this->fileLocaterPath);
     }
 
     protected function fireUpConfigCache(){
@@ -251,15 +256,27 @@ class Bootstrap {
     }
 
 
+    /**
+     * Run the System - Nice and Smooth!
+     */
     public function run(){
-
+        Scripts::initializePackageManagement($this);
+        Scripts::initializeConfigManagement($this->getPackages());
     }
 
     /**
-     * @param array $PackageMap
+     * @return mixed
      */
-    public function setPackageMap($PackageMap)
+    public function getPackages()
     {
-        $this->PackageMap = $PackageMap;
+        return $this->Packages;
+    }
+
+    /**
+     * @param mixed $Packages
+     */
+    public function setPackages($Packages)
+    {
+        $this->Packages = $Packages;
     }
 }

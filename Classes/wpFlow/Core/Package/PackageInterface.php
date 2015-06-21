@@ -1,21 +1,21 @@
 <?php
-
-namespace wpFlow\Core\Package;
+use wpFlow\Core\Bootstrap;
 
     /*                                                                        *
-     * This script belongs to the wpFlow framework.                           *
+     * This script belongs to the TYPO3 Flow framework.                       *
      *                                                                        *
      * It is free software; you can redistribute it and/or modify it under    *
      * the terms of the GNU Lesser General Public License, either version 3   *
      * of the License, or (at your option) any later version.                 *
      *                                                                        *
-     *                                                                        *
+     * The TYPO3 project - inspiring people to share!                         *
      *                                                                        */
-use wpFlow\Core\Bootstrap;
+
 
 /**
- * Interface for a wpFlow Package class
+ * Interface for a Flow Package class
  *
+ * @api
  */
 interface PackageInterface {
 
@@ -23,20 +23,25 @@ interface PackageInterface {
 
     const DIRECTORY_CLASSES = 'Classes/';
     const DIRECTORY_CONFIGURATION = 'Configuration/';
+    const DIRECTORY_DOCUMENTATION = 'Documentation/';
+    const DIRECTORY_METADATA = 'Meta/';
+    const DIRECTORY_TESTS_FUNCTIONAL = 'Tests/Functional/';
+    const DIRECTORY_TESTS_UNIT = 'Tests/Unit/';
     const DIRECTORY_RESOURCES = 'Resources/';
 
     /**
      * Invokes custom PHP code directly after the package manager has been initialized.
      *
-     * @param wpFlow\Core\Bootstrap
+     * @param  $bootstrap The current bootstrap
      * @return void
      */
-    public function boot( );
+    public function boot(Bootstrap $bootstrap);
 
     /**
      * Returns the array of filenames of the class files
      *
      * @return array An array of class names (key) and their filename, including the relative path to the package's directory
+     * @api
      */
     public function getClassFiles();
 
@@ -44,6 +49,7 @@ interface PackageInterface {
      * Returns the package key of this package.
      *
      * @return string
+     * @api
      */
     public function getPackageKey();
 
@@ -51,6 +57,7 @@ interface PackageInterface {
      * Returns the PHP namespace of classes in this package.
      *
      * @return string
+     * @api
      */
     public function getNamespace();
 
@@ -58,21 +65,49 @@ interface PackageInterface {
      * Tells if this package is protected and therefore cannot be deactivated or deleted
      *
      * @return boolean
+     * @api
      */
     public function isProtected();
+
+    /**
+     * Tells if files in the Classes directory should be registered and object management enabled for this package.
+     *
+     * @return boolean
+     */
+    public function isObjectManagementEnabled();
 
     /**
      * Sets the protection flag of the package
      *
      * @param boolean $protected TRUE if the package should be protected, otherwise FALSE
      * @return void
+     * @api
      */
+
+
     public function setProtected($protected);
+
+    /**
+     * Sets the ConfigManagementEnabled flag of the package
+     *
+     * @param $configManagementEnabled
+     * @internal param bool $ConfigManagementEnabled TRUE if the packages Config files should be managed by the system, otherwise FALSE
+     * @api
+     */
+    public function setConfigManagement($configManagementEnabled);
+
+    /**
+     * Tells if this packages Config files Management is enabled
+     *
+     * @return boolean
+     */
+    public function isConfigManagementEnabled();
 
     /**
      * Returns the full path to this package's main directory
      *
      * @return string Path to this package's main directory
+     * @api
      */
     public function getPackagePath();
 
@@ -80,6 +115,7 @@ interface PackageInterface {
      * Returns the full path to this package's Classes directory
      *
      * @return string Path to this package's Classes directory
+     * @api
      */
     public function getClassesPath();
 
@@ -108,12 +144,7 @@ interface PackageInterface {
      */
     public function getConfigurationPath();
 
-    /**
-     * Returns the full path to this package's Configuration directory
-     *
-     * @return string Path to this package's Configuration directory
-     * @api
-     */
-    public function getConfigurationFileMap();
+
+
 
 }
