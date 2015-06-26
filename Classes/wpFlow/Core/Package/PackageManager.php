@@ -16,10 +16,7 @@ use Symfony\Component\Config\Resource\FileResource;
 use wpFlow\Configuration\Config\ConfigManager;
 use wpFlow\Core\Bootstrap;
 use wpFlow\Core\Exception;
-<<<<<<< HEAD
 use wpFlow\Core\Utilities\Debug;
-=======
->>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
 use wpFlow\Core\Utilities\Files;
 
 
@@ -102,11 +99,7 @@ class PackageManager implements PackageManagerInterface
         $this->packageStatesCache = new ConfigCache($this->packageStatesPathAndFilename, true);
         $this->loadPackageStates();
 
-<<<<<<< HEAD
         $this->bootstrap->setPackages($this->activePackages);
-=======
-        $this->bootstrap->setPackages($this->packages);
->>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
 
 
         $this->activePackages = array();
@@ -490,10 +483,7 @@ class PackageManager implements PackageManagerInterface
                 continue;
             }
 
-<<<<<<< HEAD
             //add the created packages to $this->packages[$packageKey]
-=======
->>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
             $this->registerPackage($package);
 
 
@@ -581,7 +571,6 @@ class PackageManager implements PackageManagerInterface
     }
 
     /**
-<<<<<<< HEAD
      * @return object
      */
     public function getBootstrap()
@@ -590,8 +579,6 @@ class PackageManager implements PackageManagerInterface
     }
 
     /**
-=======
->>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
      * Orders all packages by comparing their dependencies. By this, the packages
      * and package configurations arrays holds all packages in the correct
      * initialization order.
@@ -660,7 +647,6 @@ class PackageManager implements PackageManagerInterface
     {
         // TODO: Implement deletePackage() method.
     }
-<<<<<<< HEAD
 
     /**
      * Returns a PackageInterface object for the specified package.
@@ -673,6 +659,4 @@ class PackageManager implements PackageManagerInterface
     {
         // TODO: Implement getPackagePath() method.
     }
-=======
->>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
 }

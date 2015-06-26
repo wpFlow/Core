@@ -3,8 +3,4 @@ Singelton:
     -
       Bootstrap: wpFlow\Core\Bootsptrap
       Package: 'jedes einzelne Package bekommt eine PackageClass'
-<<<<<<< HEAD
       PackageManager: woFlow\Core\PackageManager
-=======
-      PackageManager: woFlow\Core\PackageManager
->>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3

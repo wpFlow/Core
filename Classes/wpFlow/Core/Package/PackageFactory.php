@@ -4,11 +4,7 @@ namespace wpFlow\Core\Package;
 
 
 /*                                                                        *
-<<<<<<< HEAD
  * This script belongs to the wpFlow framework.                           *
-=======
- * This script belongs to the wpFlow framework.                       *
->>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
  *                                                                        *
  * It is free software; you can redistribute it and/or modify it under    *
  * the terms of the GNU Lesser General Public License, either version 3   *
@@ -89,11 +85,7 @@ class PackageFactory {
      */
     public static function getPackageKeyFromManifest($manifest, $packagePath, $packagesBasePath) {
         if (!is_object($manifest)) {
-<<<<<<< HEAD
             throw new  Exception('Invalid composer manifest.', 1348146450);
-=======
-            throw new  \TYPO3\Flow\Package\Exception\InvalidPackageManifestException('Invalid composer manifest.', 1348146450);
->>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
         }
         if (isset($manifest->type) && substr($manifest->type, 0, 11) === 'typo3-flow-') {
             $relativePackagePath = substr($packagePath, strlen($packagesBasePath));

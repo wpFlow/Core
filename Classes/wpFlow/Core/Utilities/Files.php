@@ -105,7 +105,6 @@ class Files {
     }
 
     /**
-<<<<<<< HEAD
      * Returns all filenames from the specified directory. Filters hidden files and
      * directories.
      *
@@ -139,8 +138,6 @@ class Files {
     }
 
     /**
-=======
->>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
      * Deletes all files, directories and subdirectories from the specified
      * directory. The passed directory itself won't be deleted though.
      *
