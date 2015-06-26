@@ -8,6 +8,12 @@
 
 namespace wpFlow\Core;
 
+<<<<<<< HEAD
+=======
+use Symfony\Component\DependencyInjection\Container;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use wpFlow\Configuration\DatabaseConfigToCache;
+>>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
 use wpFlow\Core\Booting\Scripts;
 
 include_once('ApplicationContext.php');
@@ -46,7 +52,12 @@ class Bootstrap {
         $this->defineConstants();
         $this->ensureRequiredEnvironment();
         $this->context = new ApplicationContext($context);
+<<<<<<< HEAD
 
+=======
+        $this->registerServiceContainer();
+        $this->fireUpConfigCache();
+>>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
     }
 
     /**
@@ -180,7 +191,16 @@ class Bootstrap {
                 exit(1);
             }
         }
+<<<<<<< HEAD
 
+=======
+        if (!is_dir(WPFLOW_PATH_DATA . 'Persistent') && !is_link(WPFLOW_PATH_DATA . 'Persistent')) {
+            if (!@mkdir(WPFLOW_PATH_DATA . 'Persistent')) {
+                echo('wpFlow could not create the directory "' . WPFLOW_PATH_DATA . 'Persistent". Please check the file permissions manually or run "sudo ./flow flow:core:setfilepermissions" to fix the problem. (Error #1347526553)');
+                exit(1);
+            }
+        }
+>>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
     }
 
 
@@ -225,18 +245,46 @@ class Bootstrap {
      */
     protected function registerServiceContainer(){
 
+<<<<<<< HEAD
 
 
     }
 
+=======
+        if($this->context->isDevelopment()) {
+            $this->fileLocaterPath = WPFLOW_PATH_PACKAGES . 'Framework/wpFlow.Core/Configuration/Development';
+        } else if($this->context->isProduction()) {
+            $this->fileLocaterPath = WPFLOW_PATH_PACKAGES . 'Framework/wpFlow.Core/Configuration/Production';
+        } else if($this->context->isTesting()){
+            $this->fileLocaterPath = WPFLOW_PATH_PACKAGES . 'Framework/wpFlow.Core/Configuration/Testing';
+        }
+
+    }
+
+    protected function fireUpConfigCache(){
+
+        $cachePath = WPFLOW_PATH_ROOT . 'Data/'. $this->context->getContextString() . '/Config.php';
+        $configFile = 'Config.yaml';
+        $scanDirs = array(WPFLOW_PATH_ROOT . 'Configuration', WPFLOW_PATH_PACKAGES . 'Framework/wpFlow.Configuration/Configuration' );
+
+        $cache = new DatabaseConfigToCache($cachePath,$configFile,$scanDirs);
+        $cache->writeConfigToCache();
+
+    }
+
+
+>>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
     /**
      * Run the System - Nice and Smooth!
      */
     public function run(){
         Scripts::initializePackageManagement($this);
         Scripts::initializeConfigManagement($this->getPackages());
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
     }
 
     /**
@@ -254,8 +302,11 @@ class Bootstrap {
     {
         $this->Packages = $Packages;
     }
+<<<<<<< HEAD
 
     public function wpBridge(){
         echo get_template_directory();
     }
+=======
+>>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
 }

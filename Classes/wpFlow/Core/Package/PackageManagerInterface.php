@@ -63,6 +63,7 @@ interface PackageManagerInterface {
     public function getPackage($packageKey);
 
     /**
+<<<<<<< HEAD
      * Returns a PackageInterface object for the specified package.
      * A package is available, if the package directory contains valid meta information.
      *
@@ -72,6 +73,8 @@ interface PackageManagerInterface {
     public function getPackagePath($packageKey);
 
     /**
+=======
+>>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
      * Finds a package by a given object of that package; if no such package
      * could be found, NULL is returned.
      *
@@ -170,7 +173,11 @@ interface PackageManagerInterface {
      * @param PackageInterface $package The Package to be registered
      * @param boolean $sortAndSave allows for not saving packagestates when used in loops etc.
      * @return PackageInterface
+<<<<<<< HEAD
      * @throws Exception
+=======
+     * @throws Exception\CorruptPackageException
+>>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
      */
     public function registerPackage(PackageInterface $package);
 
@@ -178,7 +185,11 @@ interface PackageManagerInterface {
      * Unregisters a package from the list of available packages
      *
      * @param PackageInterface $package The package to be unregistered
+<<<<<<< HEAD
      * @throws Exception
+=======
+     * @throws Exception\InvalidPackageStateException
+>>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
      */
     public function unregisterPackage(PackageInterface $package);
 

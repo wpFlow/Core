@@ -10,10 +10,15 @@ namespace wpFlow\Core\Package;
 
 
 
+<<<<<<< HEAD
 use wpFlow\Configuration\Config\ConfigInterface;
 use wpFlow\Core\Bootstrap;
 use wpFlow\Core\Exception;
 use wpFlow\Core\Utilities\Debug;
+=======
+use wpFlow\Core\Bootstrap;
+use wpFlow\Core\Exception;
+>>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
 use wpFlow\Core\Utilities\Files;
 
 class Package implements \PackageInterface {
@@ -97,7 +102,11 @@ class Package implements \PackageInterface {
      * @var boolean
      * @api
      */
+<<<<<<< HEAD
     protected $objectManagementEnabled = FALSE;
+=======
+    protected $objectManagementEnabled = TRUE;
+>>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
 
     /**
      * @var PackageManager
@@ -105,12 +114,17 @@ class Package implements \PackageInterface {
     protected $packageManager;
 
     /**
+<<<<<<< HEAD
      * Declare if the PackagesConfig Files should be Managed
+=======
+     * Declare if the PackgesConfig Files should be Managed
+>>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
      * Default False therefore to be activated in local Package.php file.
      * @var bool
      */
     protected $configManagementEnabled = False;
 
+<<<<<<< HEAD
     /**
      * All files from the ConfigDir of this Package filtered by
      * the ConfigFileConstraints
@@ -131,6 +145,8 @@ class Package implements \PackageInterface {
      */
     protected $configs = array();
 
+=======
+>>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
 
     /**
      * Constructor
@@ -176,10 +192,13 @@ class Package implements \PackageInterface {
         } else {
             $this->classesPath = Files::getNormalizedPath($this->packagePath . $classesPath);
         }
+<<<<<<< HEAD
 
         if($this->isConfigManagementEnabled()){
             $this->buildArrayOfConfigFiles();
         }
+=======
+>>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
     }
 
     /**
@@ -191,6 +210,7 @@ class Package implements \PackageInterface {
     public function boot(Bootstrap $bootstrap) {
     }
 
+<<<<<<< HEAD
     /**
      * @param array $configFileConstraints
      */
@@ -224,6 +244,8 @@ class Package implements \PackageInterface {
         $this->configs = $configs;
     }
 
+=======
+>>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
 
     /**
      * Check whether the given package requirement (like "wpFlow/core" or "php") is a composer package or not
@@ -337,7 +359,12 @@ class Package implements \PackageInterface {
      * Sets the ConfigManagementEnabled flag of the package
      *
      * @param $configManagementEnabled
+<<<<<<< HEAD
      * @internal param bool $ConfigManagementEnabled TRUE if the packages Config files should be managed by the system, otherwise FALSE.
+=======
+     * @internal param bool $ConfigManagementEnabled TRUE if the packages Config files should be managed by the system, otherwise FALSE
+     * @api
+>>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
      */
     public function setConfigManagement($configManagementEnabled) {
         $this->configManagementEnabled = (boolean)$configManagementEnabled;
@@ -356,6 +383,10 @@ class Package implements \PackageInterface {
      * Returns the full path to this package's main directory
      *
      * @return string Path to this package's main directory
+<<<<<<< HEAD
+=======
+     * @api
+>>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
      */
     public function getPackagePath() {
         return $this->packagePath;
@@ -374,6 +405,10 @@ class Package implements \PackageInterface {
      * Returns the full path to this package's Classes directory
      *
      * @return string Path to this package's Classes directory
+<<<<<<< HEAD
+=======
+     * @api
+>>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
      */
     public function getClassesPath() {
         return $this->classesPath;
@@ -409,11 +444,15 @@ class Package implements \PackageInterface {
      * @api
      */
     public function getConfigurationPath() {
+<<<<<<< HEAD
         if($this->packageManager->getBootstrap()->getContext() == 'Production') {
             return $this->packagePath . self::DIRECTORY_CONFIGURATION;
         } else
 
         return $this->packagePath . self::DIRECTORY_CONFIGURATION . $this->packageManager->getBootstrap()->getContext();
+=======
+        return $this->packagePath . self::DIRECTORY_CONFIGURATION;
+>>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
     }
 
     /**
@@ -483,6 +522,7 @@ class Package implements \PackageInterface {
         }
         return $classFiles;
     }
+<<<<<<< HEAD
 
     protected function buildArrayOfConfigFiles(){
 
@@ -506,4 +546,6 @@ class Package implements \PackageInterface {
             $this->filteredConfigDirFiles[$constraint] = Files::readDirectory($this->getConfigurationPath(), '.' . $constraint);
         }
     }
+=======
+>>>>>>> f85394a0c3c9a99459129fcd3320e99423b4cad3
 }
