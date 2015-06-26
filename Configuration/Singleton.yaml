@@ -1,0 +1,6 @@
+Singelton:
+  classes:
+    -
+      Bootstrap: wpFlow\Core\Bootsptrap
+      Package: 'jedes einzelne Package bekommt eine PackageClass'
+      PackageManager: woFlow\Core\PackageManager
