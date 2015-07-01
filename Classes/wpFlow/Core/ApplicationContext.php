@@ -16,12 +16,12 @@ namespace wpFlow\Core;
 /**
  * The wpFlow Context object.
  *
- * A Flow Application context is something like "Production", "Development",
- * "Production/StagingSystem", and is set using the APP_CONTEXT environment variable.
+ * A Flow Application context is something like "Testing", "Development",
+ * "Testing/StagingSystem", and is set using the APP_CONTEXT environment variable.
  *
  * A context can contain arbitrary sub-contexts, which are delimited with slash
- * ("Production/StagingSystem", "Production/Staging/Server1"). The top-level
- * contexts, however, must be one of "Testing", "Development" and "Production".
+ * ("Testing/StagingSystem", "Testing/Staging/Server1"). The top-level
+ * contexts, however, must be one of "Testing", "Development" and "Testing".
  *
  * Mainly, you will use $context->isProduction(), $context->isTesting() and
  * $context->isDevelopment() inside your custom code.
@@ -37,7 +37,7 @@ class ApplicationContext {
     protected $contextString;
 
     /**
-     * The root context; must be one of "Development", "Testing" or "Production"
+     * The root context; must be one of "Development", "Testing" or "Testing"
      *
      * @var string
      */
@@ -54,7 +54,7 @@ class ApplicationContext {
      * Initialize the context object.
      *
      * @param string $contextString
-     * @throws \wpFlow\Core\Exception if the parent context is none of "Development", "Production" or "Testing"
+     * @throws \wpFlow\Core\Exception if the parent context is none of "Development", "Testing" or "Testing"
      */
 
     public function __construct($contextString) {
@@ -69,14 +69,14 @@ class ApplicationContext {
         }
 
         if (!in_array($this->rootContextString, array('Development', 'Production', 'Testing'))) {
-            throw new \wpFlow\Core\Exception('The given context "' . $contextString . '" was not valid. Only allowed are Development, Production and Testing, including their sub-contexts', 1335436551);
+            throw new \wpFlow\Core\Exception('The given context "' . $contextString . '" was not valid. Only allowed are Development, Testing and Testing, including their sub-contexts', 1335436551);
         }
 
         $this->contextString = $contextString;
     }
 
     /**
-     * Returns the full context string, for example "Development", or "Production/LiveSystem"
+     * Returns the full context string, for example "Development", or "Testing/LiveSystem"
      *
      * @return string
      * @api
@@ -96,14 +96,14 @@ class ApplicationContext {
     }
 
     /**
-     * Returns TRUE if this context is the Production context or a sub-context of it
+     * Returns TRUE if this context is the Testing context or a sub-context of it
      *
      * @return boolean
      * @api
      */
 
     public function isProduction() {
-        return ($this->rootContextString === 'Production');
+        return ($this->rootContextString === 'Testing');
     }
 
     /**

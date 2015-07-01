@@ -44,10 +44,47 @@ class Scripts {
      * @param \PackageInterface $package
      */
 
-    static public function initializeConfigManagement($package){
+    static public function initializeConfigManagement($package, Bootstrap $bootstrap){
         $configManager = new ConfigManager();
-        $configManager->initialize($package);
+        $configManager->initialize($package, $bootstrap);
 
+    }
+
+    /**
+     * Tries to find an environment setting with the following fallback chain:
+     *
+     * - getenv with $variableName
+     * - getenv with REDIRECT_ . $variableName (this is for php cgi where environment variables from the http server get prefixed)
+     * - $_SERVER[$variableName] (this is an alternative to set WPFLOW_* environment variables if passing environment variables is not possible)
+     * - $_SERVER[REDIRECT_ . $variableName] (again for php cgi environments)
+     *
+     * @param string $variableName
+     * @return string or NULL if this variable was not set at all.
+     */
+    static public function getEnvironmentConfigurationSetting($variableName) {
+
+        dump('The ' . __METHOD__ . 'in ' . __CLASS__ .' produces null when in use!');
+
+        $variableValue = getenv($variableName);
+
+        if ($variableValue !== FALSE) {
+            return $variableValue;
+        }
+
+        $variableValue = getenv('REDIRECT_' . $variableName);
+        if ($variableValue !== FALSE) {
+            return $variableValue;
+        }
+
+        if (isset($_SERVER[$variableName])) {
+            return $_SERVER[$variableName];
+        }
+
+        if (isset($_SERVER['REDIRECT_' . $variableName])) {
+            return $_SERVER['REDIRECT_' . $variableName];
+        }
+
+        return NULL;
     }
 
 

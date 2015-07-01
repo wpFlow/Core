@@ -191,5 +191,4 @@ interface PackageManagerInterface {
      */
     public function deletePackage($packageKey);
 
-
 }

@@ -96,7 +96,7 @@ class PackageManager implements PackageManagerInterface
         $this->packageStatesPathAndFilename = $this->packageStatesPathAndFilename ?: WPFLOW_PATH_DATA . 'PackageCache/PackageStates.php';
         $this->packageFactory = new PackageFactory($this);
 
-        $this->packageStatesCache = new ConfigCache($this->packageStatesPathAndFilename, true);
+        $this->packageStatesCache = new ConfigCache($this->packageStatesPathAndFilename, false);
         $this->loadPackageStates();
 
         $this->bootstrap->setPackages($this->activePackages);
@@ -563,7 +563,7 @@ class PackageManager implements PackageManagerInterface
         if (!isset($this->packageStatesConfiguration['version']) || $this->packageStatesConfiguration['version'] < 4) {
             $this->packageStatesConfiguration = array();
         }
-        if ($this->packageStatesConfiguration === array() || !$this->bootstrap->getContext()->isProduction()) {
+        if ($this->packageStatesConfiguration === array() || $this->bootstrap->getContext()->isDevelopment() || $this->bootstrap->getContext()->isTesting()) {
             $this->scanAvailablePackages();
         } else {
             $this->registerPackagesFromConfiguration();

@@ -95,7 +95,7 @@ class Files {
                 continue;
             }
             if ($fileInfo->isFile() && ($suffix === NULL || substr($filename, -$suffixLength) === $suffix)) {
-                $filenames[] = self::getUnixStylePath(($returnRealPath === TRUE ? realpath($fileInfo->getPathname()) : $fileInfo->getPathname()));
+                $filenames[$filename] = self::getUnixStylePath(($returnRealPath === TRUE ? realpath($fileInfo->getPathname()) : $fileInfo->getPathname()));
             }
             if ($fileInfo->isDir()) {
                 self::readDirectoryRecursively($fileInfo->getPathname(), $suffix, $returnRealPath, $returnDotFiles, $filenames);
@@ -116,7 +116,7 @@ class Files {
      * @return array Filenames including full path
      * @throws Exception
      */
-    static public function readDirectory($path, $suffix = NULL, $returnRealPath = FALSE, $returnDotFiles = FALSE, &$filenames = array()) {
+    static public function readDirectory($path, $suffix = NULL, $returnSlicedFilenames = FALSE, $returnRealPath = FALSE, $returnDotFiles = FALSE, &$filenames = array()) {
         if (!is_dir($path)) {
             throw new Exception('"' . $path . '" is no directory.', 1207253462);
         }
@@ -130,7 +130,14 @@ class Files {
                 continue;
             }
             if ($fileInfo->isFile() && ($suffix === NULL || substr($filename, -$suffixLength) === $suffix)) {
-                $filenames[] = self::getUnixStylePath(($returnRealPath === TRUE ? realpath($fileInfo->getPathname()) : $fileInfo->getPathname()));
+
+                if($returnSlicedFilenames === TRUE) {
+                    $filenames[$filename] = dirname(self::getUnixStylePath(($returnRealPath === TRUE ? realpath($fileInfo->getPathname()) : $fileInfo->getPathname())));
+                } else {
+                    $filenames[$filename] = self::getUnixStylePath(($returnRealPath === TRUE ? realpath($fileInfo->getPathname()) : $fileInfo->getPathname()));
+                }
+
+
             }
 
         }

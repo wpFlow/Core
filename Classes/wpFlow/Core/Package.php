@@ -29,6 +29,7 @@ class Package extends BasePackage {
 
     public function boot(Bootstrap $bootstrap){
        $this->bootstrap = $bootstrap;
+
     }
 
 

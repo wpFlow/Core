@@ -13,6 +13,7 @@ namespace wpFlow\Core\Package;
 use wpFlow\Configuration\Config\ConfigInterface;
 use wpFlow\Core\Bootstrap;
 use wpFlow\Core\Exception;
+use wpFlow\Core\Utilities\Arrays;
 use wpFlow\Core\Utilities\Debug;
 use wpFlow\Core\Utilities\Files;
 
@@ -125,12 +126,6 @@ class Package implements \PackageInterface {
      */
     protected $configFileConstraints = array('yaml', 'yml');
 
-    /**
-     * An array with each instance of the Config Class
-     * @var array with objects
-     */
-    protected $configs = array();
-
 
     /**
      * Constructor
@@ -178,6 +173,7 @@ class Package implements \PackageInterface {
         }
 
         if($this->isConfigManagementEnabled()){
+            $this->ensurePackageConfigEnvironment();
             $this->buildArrayOfConfigFiles();
         }
     }
@@ -208,22 +204,12 @@ class Package implements \PackageInterface {
     }
 
     /**
-     * @return array
+     * @return PackageManager
      */
-    public function getConfigs()
+    public function getPackageManager()
     {
-        return $this->configs;
+        return $this->packageManager;
     }
-
-    /**
-     * @param ConfigInterface $configs
-     * @internal param $ array|ConfigInterface
-     */
-    public function setConfigs($configs)
-    {
-        $this->configs = $configs;
-    }
-
 
     /**
      * Check whether the given package requirement (like "wpFlow/core" or "php") is a composer package or not
@@ -406,14 +392,29 @@ class Package implements \PackageInterface {
      * Returns the full path to this package's Configuration directory
      *
      * @return string Path to this package's Configuration directory
-     * @api
      */
     public function getConfigurationPath() {
-        if($this->packageManager->getBootstrap()->getContext() == 'Production') {
-            return $this->packagePath . self::DIRECTORY_CONFIGURATION;
-        } else
 
-        return $this->packagePath . self::DIRECTORY_CONFIGURATION . $this->packageManager->getBootstrap()->getContext();
+        return $this->packagePath . self::DIRECTORY_CONFIGURATION;
+    }
+
+    /**
+     * Returns the full path to this package's Configuration directory
+     *
+     * @return string Path to this package's Configuration directory
+     */
+    public function getConfigurationPathByContext() {
+        if($this->packageManager->getBootstrap()->getContext()->getContextString() == 'Development'){
+            $applicationContext = 'Development';
+
+        } elseif($this->packageManager->getBootstrap()->getContext()->getContextString() == 'Testing') {
+            $applicationContext = 'Testing';
+
+        } else {
+            $applicationContext = '';
+        }
+
+        return $this->packagePath . self::DIRECTORY_CONFIGURATION . $applicationContext;
     }
 
     /**
@@ -486,24 +487,33 @@ class Package implements \PackageInterface {
 
     protected function buildArrayOfConfigFiles(){
 
-        $dir = $this->getPackagePath().'Configuration/';
-
-        if (!is_dir($dir . 'Testing') ) {
-            if (!@mkdir($dir . 'Testing')) {
-                echo('wpFlow could not create the directory "' . $dir. 'Testing". Please check the file permissions manually. (Error #1347526552)');
-                exit(1);
-            }
-        }
-
-        if (!is_dir($dir . 'Development') ) {
-            if (!@mkdir($dir. 'Development')) {
-                echo('wpFlow could not create the directory "' . $dir. 'Development". Please check the file permissions manually. (Error #1347526552)');
-                exit(1);
-            }
-        }
-
         foreach ($this->configFileConstraints as $constraint) {
-            $this->filteredConfigDirFiles[$constraint] = Files::readDirectory($this->getConfigurationPath(), '.' . $constraint);
+
+            $this->filteredConfigDirFiles[$constraint] = Files::readDirectory($this->getConfigurationPathByContext(), '.' . $constraint);
+        }
+    }
+
+    protected function getConfigValues($fileName){
+        $context = $this->packageManager->getBootstrap()->getContext()->getContextString();
+        $cacheFile = WPFLOW_PATH_DATA . 'ConfigManagementCache/' . $context .'/'. $this->getPackageKey() .'Config.php';
+
+        if(file_exists($cacheFile)) {
+            $fileContent =  unserialize(Files::getFileContents($cacheFile));
+        } else throw new Exception("No File ($cacheFile) available");
+
+        foreach($fileContent as $key => $values) {
+
+            if(isset($fileContent[$fileName]))
+            return $fileContent[$fileName];
+        }
+    }
+
+    protected function ensurePackageConfigEnvironment(){
+        if (!is_dir($this->getConfigurationPathByContext()) && !is_link($this->getConfigurationPathByContext())) {
+            if (!@mkdir($this->getConfigurationPathByContext())) {
+                echo('wpFlow could not create the directory "' . $this->getConfigurationPathByContext() . '". Please check the file permissions manually. (Error #1347526552)');
+                exit(1);
+            }
         }
     }
 }
