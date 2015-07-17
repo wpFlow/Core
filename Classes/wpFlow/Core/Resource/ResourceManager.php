@@ -53,6 +53,7 @@ class ResourceManager {
                 $this->resolveResourceType($registeredResources, $path, $package->getPackageKey());
                 $this->resolvePathByType($path,$this->registeredResources[$package->getPackageKey()]['Public'] ,$package->getPackageKey());
 
+                // load the resource file content into the array
                 $this->loadResourceContent($this->registeredResources[$package->getPackageKey()]['Public'], $package->getPackageKey());
 
                 $handle = $this->registeredResources[$package->getPackageKey()]['Public'];
@@ -207,7 +208,7 @@ class ResourceManager {
 
         $context = $this->bootstrap->getContext();
 
-        $register = new RegisterResource($handle, $fileName, $context);
+        $register = new RegisterResource($handle, $fileName);
 
         switch($type){
             case 'cdn':
