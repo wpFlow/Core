@@ -19,6 +19,7 @@ class Bootstrap {
      * Required PHP version
      */
     const MINIMUM_PHP_VERSION = '5.3.2';
+
     const MAXIMUM_PHP_VERSION = '5.99.9';
 
     static protected $instance = null;
@@ -28,6 +29,10 @@ class Bootstrap {
     protected $fileLocaterPath;
 
     protected $Packages;
+
+    protected $configValidation;
+
+    protected $packageManager;
 
 
     static public function boot($context)
@@ -57,6 +62,31 @@ class Bootstrap {
      */
     public function getContext() {
         return $this->context;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getConfigValidation()
+    {
+        return $this->configValidation;
+    }
+
+    /**
+     * @param $className
+     * @param $fileName
+     */
+    public function addConfigValidation($className, $fileName)
+    {
+        $this->configValidation[$fileName] = $className;
+    }
+
+    /**
+     * @param mixed $packageManager
+     */
+    public function setPackageManager($packageManager)
+    {
+        $this->packageManager = $packageManager;
     }
 
     /**
@@ -110,8 +140,6 @@ class Bootstrap {
      */
     public function run(){
         Scripts::initializePackageManagement($this);
-        Scripts::initializeConfigManagement($this->getPackages(), $this);
-
     }
 
     /**

@@ -8,9 +8,6 @@
 
 namespace wpFlow\Core\Package;
 
-
-
-use wpFlow\Configuration\Config\ConfigInterface;
 use wpFlow\Core\Bootstrap;
 use wpFlow\Core\Exception;
 use wpFlow\Core\Utilities\Arrays;
@@ -18,13 +15,6 @@ use wpFlow\Core\Utilities\Debug;
 use wpFlow\Core\Utilities\Files;
 
 class Package implements \PackageInterface {
-
-    /**
-     * The Instance of this Class
-     */
-
-    private static $instance = NULL;
-
 
     /**
      * @var string
@@ -110,7 +100,7 @@ class Package implements \PackageInterface {
      * Default False therefore to be activated in local Package.php file.
      * @var bool
      */
-    protected $configManagementEnabled = False;
+    protected $configManagementEnabled = false;
 
     /**
      * All files from the ConfigDir of this Package filtered by
@@ -125,6 +115,12 @@ class Package implements \PackageInterface {
      * @var array of strings
      */
     protected $configFileConstraints = array('yaml', 'yml');
+
+    /**
+     * Array of Resource Registration Content (Content of Resources.yaml)
+     * @var array
+     */
+    protected $resources = array();
 
 
     /**
@@ -173,7 +169,7 @@ class Package implements \PackageInterface {
         }
 
         if($this->isConfigManagementEnabled()){
-            $this->ensurePackageConfigEnvironment();
+           // $this->ensurePackageConfigEnvironment();
             $this->buildArrayOfConfigFiles();
         }
     }
@@ -185,6 +181,13 @@ class Package implements \PackageInterface {
      * @return void
      */
     public function boot(Bootstrap $bootstrap) {
+    }
+
+    public function setConfigDefaults() {
+        if($this->isConfigManagementEnabled()){
+            $resourceYamlContent = $this->getConfigValues('Resources.yaml');
+            $this->setResources($resourceYamlContent[$this->packageKey]);
+        }
     }
 
     /**
@@ -496,16 +499,18 @@ class Package implements \PackageInterface {
     protected function getConfigValues($fileName){
         $context = $this->packageManager->getBootstrap()->getContext()->getContextString();
         $cacheFile = WPFLOW_PATH_DATA . 'ConfigManagementCache/' . $context .'/'. $this->getPackageKey() .'Config.php';
+        $filePath = $this->getConfigurationPathByContext(). '/' . $fileName;
 
-        if(file_exists($cacheFile)) {
-            $fileContent =  unserialize(Files::getFileContents($cacheFile));
-        } else throw new Exception("No File ($cacheFile) available");
+        /**
+         * @todo: get data direct from configManager, instead from the cached file (only in dev and testing context)!
+         */
 
-        foreach($fileContent as $key => $values) {
+        $fileContent = unserialize(Files::getFileContents($cacheFile));
 
-            if(isset($fileContent[$fileName]))
+        if(!$fileContent[$fileName] == NULL) {
             return $fileContent[$fileName];
         }
+
     }
 
     protected function ensurePackageConfigEnvironment(){
@@ -515,5 +520,21 @@ class Package implements \PackageInterface {
                 exit(1);
             }
         }
+    }
+
+    /**
+     * @return array
+     */
+    public function getResources()
+    {
+        return $this->resources;
+    }
+
+    /**
+     * @param array $resources
+     */
+    protected function setResources($resources)
+    {
+        $this->resources = $resources;
     }
 }

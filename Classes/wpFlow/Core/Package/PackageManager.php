@@ -14,8 +14,10 @@ use PackageInterface;
 use Symfony\Component\Config\ConfigCache;
 use Symfony\Component\Config\Resource\FileResource;
 use wpFlow\Configuration\Config\ConfigManager;
+use wpFlow\Core\Booting\Scripts;
 use wpFlow\Core\Bootstrap;
 use wpFlow\Core\Exception;
+use wpFlow\Core\Resource\ResourceManager;
 use wpFlow\Core\Utilities\Debug;
 use wpFlow\Core\Utilities\Files;
 
@@ -95,12 +97,14 @@ class PackageManager implements PackageManagerInterface
         $this->bootstrap = $bootstrap;
         $this->packageStatesPathAndFilename = $this->packageStatesPathAndFilename ?: WPFLOW_PATH_DATA . 'PackageCache/PackageStates.php';
         $this->packageFactory = new PackageFactory($this);
-
         $this->packageStatesCache = new ConfigCache($this->packageStatesPathAndFilename, false);
         $this->loadPackageStates();
 
+        //set up all active packages to the bootstrap class for further use
         $this->bootstrap->setPackages($this->activePackages);
 
+        //deliver an anstance of this packageManager to the bootsptrap
+        $this->bootstrap->setPackageManager($this);
 
         $this->activePackages = array();
         foreach ($this->packages as $packageKey => $package) {
@@ -109,12 +113,33 @@ class PackageManager implements PackageManagerInterface
             }
         }
 
-        foreach ($this->activePackages as $package) {
-            $package->boot($bootstrap);
-        }
+        //initialize the config Manager
+        $configManager = new ConfigManager();
+        $configManager->initialize($this->activePackages, $this->bootstrap);
 
+        $this->bootConfigDefaults();
+
+        //initialize the Resource Manager
+        $resourceManager = new ResourceManager();
+        $resourceManager->initialize($this->activePackages, $this->bootstrap);
+
+        $this->bootPackages();
 
     }
+
+    protected function bootPackages(){
+        foreach ($this->activePackages as $package) {
+            $package->boot($this->bootstrap);
+        }
+    }
+
+    protected function bootConfigDefaults(){
+        foreach ($this->activePackages as $package) {
+            $package->setConfigDefaults();
+        }
+    }
+
+
 
     protected function scanAvailablePackages()
     {
@@ -137,7 +162,6 @@ class PackageManager implements PackageManagerInterface
             if ($parentFilename[0] !== '.' && $parentFileInfo->isDir()) {
 
                 $packagePaths = $this->scanPackagesInPath($parentFileInfo->getPathname());
-
             }
 
             foreach ($packagePaths as $packagePath => $composerManifestPath) {
@@ -162,6 +186,7 @@ class PackageManager implements PackageManagerInterface
 
                 // Change this to read the target from Composer or any other source
                 $this->packageStatesConfiguration['packages'][$packageKey]['classesPath'] = Package::DIRECTORY_CLASSES;
+
             }
         }
 

@@ -18,18 +18,14 @@ class Package extends BasePackage {
      * @var boolean
      */
     protected $protected = TRUE;
-
-    /**
-     * @var boolean
-     */
     protected $configManagementEnabled = true;
+
 
     protected $bootstrap;
 
 
     public function boot(Bootstrap $bootstrap){
        $this->bootstrap = $bootstrap;
-
     }
 
 

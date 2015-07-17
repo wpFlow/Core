@@ -14,6 +14,7 @@ namespace wpFlow\Core\Booting;
 use wpFlow\Configuration\Config\ConfigManager;
 use wpFlow\Core\Package\PackageManager;
 use wpFlow\Core\Bootstrap;
+use wpFlow\Core\Resource\ResourceManager;
 
 
 /**
@@ -35,19 +36,6 @@ class Scripts {
 
         $packageManager = new PackageManager();
         $packageManager->initialize($bootstrap);
-    }
-
-    /**
-     * Initializes the config system and loads the package configuration
-     * provided by the packages.
-     *
-     * @param \PackageInterface $package
-     */
-
-    static public function initializeConfigManagement($package, Bootstrap $bootstrap){
-        $configManager = new ConfigManager();
-        $configManager->initialize($package, $bootstrap);
-
     }
 
     /**

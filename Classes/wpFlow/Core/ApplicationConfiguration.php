@@ -169,7 +169,7 @@ class ApplicationConfiguration {
 
 
         $configCacheDir = WPFLOW_PATH_DATA . 'ApplicationConfiguration/' . $applicationContext .'AppConfig.php';
-        dump($applicationContext);
+
         $configCacheFile = ROOT_DIR . "/Configuration/$applicationContext/Config.yaml";
         $cache = new ConfigCache($configCacheDir, false);
 

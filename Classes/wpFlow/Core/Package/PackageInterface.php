@@ -37,6 +37,8 @@ interface PackageInterface {
      */
     public function boot(Bootstrap $bootstrap);
 
+    public function setConfigDefaults();
+
     /**
      * Returns the array of filenames of the class files
      *
@@ -88,22 +90,6 @@ interface PackageInterface {
     public function setProtected($protected);
 
     /**
-     * Sets the ConfigManagementEnabled flag of the package
-     *
-     * @param $configManagementEnabled
-     * @internal param bool $ConfigManagementEnabled TRUE if the packages Config files should be managed by the system, otherwise FALSE
-     * @api
-     */
-    public function setConfigManagement($configManagementEnabled);
-
-    /**
-     * Tells if this packages Config files Management is enabled
-     *
-     * @return boolean
-     */
-    public function isConfigManagementEnabled();
-
-    /**
      * Returns the full path to this package's main directory
      *
      * @return string Path to this package's main directory
@@ -143,6 +129,10 @@ interface PackageInterface {
      * @api
      */
     public function getConfigurationPath();
+
+    public function isConfigManagementEnabled();
+
+    public function setConfigManagement($configManagementEnabled);
 
 
 
