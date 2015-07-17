@@ -75,21 +75,21 @@ class ResourceManager {
 
         // embed the main compiled javascript file with the HEADER position
         $headerContent = $this->buildCompiledJS('Header');
-        $mainHeaderJS = $resourceFactory->create($handle = 'mainHeaderJS', $type = 'local', $fileName = 'mainHeader.js', $ranking = 1, $position = 'header', $minify = false, $resourcePath = '', $headerContent, $compile = '',$expression = '');
+        $mainHeaderJS = $resourceFactory->create($handle = 'mainHeaderJS', $type = 'local', $fileName = 'mainHeader.js', $ranking = 1, $position = 'header', $minify = false, $resourcePath = '', $headerContent, $compile = false ,$expression = '');
 
         $this->registerResources($mainHeaderJS);
         $this->enqueueScriptResources($mainHeaderJS->getHandle(), $expression = !is_admin());
 
         // embed the main compiled javascript file with the FOOTER position
         $footerContent = $this->buildCompiledJS('Footer');
-        $mainFooterJS = $resourceFactory->create($handle = 'mainFooterJS', $type = 'local', $fileName = 'mainFooter.js', $ranking = 1, $position = 'footer', $minify = false, $resourcePath = '', $footerContent, $compile = '',$expression = '');
+        $mainFooterJS = $resourceFactory->create($handle = 'mainFooterJS', $type = 'local', $fileName = 'mainFooter.js', $ranking = 1, $position = 'footer', $minify = false, $resourcePath = '', $footerContent, $compile = false ,$expression = '');
 
         $this->registerResources($mainFooterJS);
         $this->enqueueScriptResources($mainFooterJS->getHandle(), $expression = !is_admin());
 
         // embed the main compiled CSS file
         $cssContent = $this->buildCompiledCSS();
-        $mainCSS = $resourceFactory->create($handle = 'mainCSS', $type = 'local', $fileName = 'main.css', $ranking = 1, $position = 'header', $minify = false, $resourcePath = '', $cssContent, $compile = '',$expression = '');
+        $mainCSS = $resourceFactory->create($handle = 'mainCSS', $type = 'local', $fileName = 'main.css', $ranking = 1, $position = 'header', $minify = false, $resourcePath = '', $cssContent, $compile = false ,$expression = '');
 
         $this->registerResources($mainCSS);
         $this->enqueueStyleResources($mainCSS->getHandle(), $expression = !is_admin());
@@ -111,7 +111,6 @@ class ResourceManager {
                 $this->enqueueStyleResources($cssResource->getHandle(), $cssResource->getExpression());
             }
         }
-
     }
 
     protected function sortAndFilterResourceEntitiesByRanking($filter){
@@ -206,7 +205,9 @@ class ResourceManager {
                 break;
         }
 
-        $register = new RegisterResource($handle, $fileName);
+        $context = $this->bootstrap->getContext();
+
+        $register = new RegisterResource($handle, $fileName, $context);
 
         switch($type){
             case 'cdn':
@@ -214,8 +215,11 @@ class ResourceManager {
                 break;
 
             case 'local' || 'localCDN':
-                $register->dumpReadable($content, NULL, $resourceFolder);
-                $src = get_template_directory_uri() . $resourceFolder . '/' . $fileName;
+
+                $src = $resource->getPublicURI();
+                if ($context->isDevelopment() || $context->isTesting() || !file_exists($resource->getPublicPath())) {
+                    $register->dumpReadable($content, NULL, $resourceFolder);
+                }
                 break;
         }
 
@@ -305,11 +309,7 @@ class ResourceManager {
                         $cdnContent = file_get_contents($path . $file);
                         $resources[$handle]['Content'] = $cdnContent;
                     }
-
                     break;
-
-                default:
-
             }
 
             $this->registeredResources[$packageKey]['Public'][$handle] = $resources[$handle];

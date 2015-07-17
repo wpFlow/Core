@@ -85,6 +85,20 @@ class Resource {
      */
     protected $fileType;
 
+    /**
+     * The path to where the public accessible Version of the resource resides.
+     * Only set when resource type is local or localCDN.
+     * @var string
+     */
+    protected $publicPath;
+
+    /**
+     * The URI to where the public accessible Version of the resource resides.
+     * Only set when resource type is local or localCDN.
+     * @var string
+     */
+    protected $publicURI;
+
 
     public function __construct($handle,$type, $fileName, $ranking,$position, $minify, $resourcePath, $content, $compile, $expression ){
         $this->handle = $handle;
@@ -99,6 +113,11 @@ class Resource {
         $this->expression = $expression;
 
         $this->fileType = pathinfo($this->fileName, PATHINFO_EXTENSION);
+
+        if ($this->type === 'local' || 'localCDN') {
+            $this->publicPath = get_template_directory() . '/' . $this->fileType . '/' . $this->fileName;
+            $this->publicURI = get_template_directory_uri() . '/' . $this->fileType . '/' . $this->fileName;
+        }
     }
 
     /**
@@ -250,6 +269,22 @@ class Resource {
     public function getExpression()
     {
         return $this->expression;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPublicPath()
+    {
+        return $this->publicPath;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPublicURI()
+    {
+        return $this->publicURI;
     }
 
 }
