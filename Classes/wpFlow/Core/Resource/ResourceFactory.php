@@ -13,9 +13,9 @@ class ResourceFactory {
 
 
 
-    public function create($handle,$type, $fileName, $ranking,$position, $minify, $resourcePath, $content, $compile, $expression){
+    public function create($handle = NULL ,$type = NULL, $fileName = NULL, $ranking = NULL,$position = NULL, $minify = NULL, $resourcePath = NULL, $content = NULL, $compile = NULL, $expression = NULL,$arguments = NULL, $scss = NULL){
 
-        $resource = new Resource($handle,$type, $fileName, $ranking,$position, $minify, $resourcePath, $content, $compile, $expression);
+        $resource = new Resource($handle,$type, $fileName, $ranking,$position, $minify, $resourcePath, $content, $compile, $expression,$arguments, $scss);
 
         return $resource;
 

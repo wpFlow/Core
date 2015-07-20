@@ -43,6 +43,8 @@ class ResourceManager {
         $packages = $this->configManagementEnabledPackages;
 
         $resourceFactory = new ResourceFactory();
+        $scss = new \scssc();
+
         foreach($packages as $package){
             $this->registeredResources[$package->getPackageKey()] = $package->getResources();
             $path = $package->getResourcesPath() . self::PUBLICFOLDER;
@@ -68,8 +70,9 @@ class ResourceManager {
                     $content = $values['Content'];
                     $compile = $values['Compile'];
                     $expression = $values['Options']['Expression'];
+                    $arguments = $values['Options']['Arguments'];
 
-                    $this->resourceEntities[$handleName] = $resourceFactory->create($handleName, $type, $fileName, $ranking, $position, $minify, $resourcePath, $content, $compile, $expression);
+                    $this->resourceEntities[$handleName] = $resourceFactory->create($handleName, $type, $fileName, $ranking, $position, $minify, $resourcePath, $content, $compile, $expression,$arguments ,$scss);
                 }
             }
         }
@@ -79,28 +82,28 @@ class ResourceManager {
         $mainHeaderJS = $resourceFactory->create($handle = 'mainHeaderJS', $type = 'local', $fileName = 'mainHeader.js', $ranking = 1, $position = 'header', $minify = false, $resourcePath = '', $headerContent, $compile = false ,$expression = '');
 
         $this->registerResources($mainHeaderJS);
-        $this->enqueueScriptResources($mainHeaderJS->getHandle(), $expression = !is_admin());
+        $this->enqueueScriptResources($mainHeaderJS->getHandle(), $expression = "is_page", $arguments = array());
 
         // embed the main compiled javascript file with the FOOTER position
         $footerContent = $this->buildCompiledJS('Footer');
         $mainFooterJS = $resourceFactory->create($handle = 'mainFooterJS', $type = 'local', $fileName = 'mainFooter.js', $ranking = 1, $position = 'footer', $minify = false, $resourcePath = '', $footerContent, $compile = false ,$expression = '');
 
         $this->registerResources($mainFooterJS);
-        $this->enqueueScriptResources($mainFooterJS->getHandle(), $expression = !is_admin());
+        $this->enqueueScriptResources($mainFooterJS->getHandle(), $expression = "is_page", $arguments = array());
 
         // embed the main compiled CSS file
         $cssContent = $this->buildCompiledCSS();
         $mainCSS = $resourceFactory->create($handle = 'mainCSS', $type = 'local', $fileName = 'main.css', $ranking = 1, $position = 'header', $minify = false, $resourcePath = '', $cssContent, $compile = false ,$expression = '');
 
         $this->registerResources($mainCSS);
-        $this->enqueueStyleResources($mainCSS->getHandle(), $expression = !is_admin());
+        $this->enqueueStyleResources($mainCSS->getHandle(), $expression = "is_page", $arguments = array());
 
         $sortedJS = $this->sortAndFilterResourceEntitiesByRanking('js');
 
         foreach($sortedJS as $jsResource){
             if($jsResource->isNotCompileEnabled()){
                 $this->registerResources($jsResource);
-                $this->enqueueScriptResources($jsResource->getHandle(), $jsResource->getExpression());
+                $this->enqueueScriptResources($jsResource->getHandle(), $jsResource->getExpression(), $jsResource->getArguments());
             }
         }
 
@@ -109,7 +112,7 @@ class ResourceManager {
         foreach($sortedCSS as $cssResource){
             if($cssResource->isNotCompileEnabled()){
                 $this->registerResources($cssResource);
-                $this->enqueueStyleResources($cssResource->getHandle(), $cssResource->getExpression());
+                $this->enqueueStyleResources($cssResource->getHandle(), $cssResource->getExpression(), $cssResource->getArguments());
             }
         }
     }
@@ -143,18 +146,18 @@ class ResourceManager {
 
     }
 
-    protected function enqueueStyleResources($handle, $expression = NULL){
+    protected function enqueueStyleResources($handle, $expression = NULL, $args){
 
         switch(isset($expression)){
 
             case true:
-
-                if($expression){
+                if(call_user_func_array($expression, $args)){
                     wp_enqueue_style($handle);
                 }
                 break;
 
             case false:
+                dump('BINGO');
                 wp_enqueue_style($handle);
                 break;
         }
@@ -178,37 +181,10 @@ class ResourceManager {
 
     protected function registerResources($resource){
 
-        $handle = $resource->getHandle();
-        $fileName = $resource->getFileName();
-        $content = $resource->getContent();
-        $resourceType = $resource->getFileType();
         $type = $resource->getType();
-        $position = $resource->getPosition();
-
-        switch($resourceType){
-            case 'js':
-                $resourceFolder = '/' . self::JAVASCRIPT_RESOURCES;
-                break;
-
-            case 'css':
-                $resourceFolder = '/' . self::STYLESHEETS;
-                break;
-        }
-
-        switch($position){
-
-            case 'header';
-                $position = false;
-                break;
-
-            case 'footer':
-                $position = true;
-                break;
-        }
-
         $context = $this->bootstrap->getContext();
 
-        $register = new RegisterResource($handle, $fileName);
+        $register = new RegisterResource($resource);
 
         switch($type){
             case 'cdn':
@@ -219,13 +195,13 @@ class ResourceManager {
 
                 $src = $resource->getPublicURI();
                 if ($context->isDevelopment() || $context->isTesting() || !file_exists($resource->getPublicPath())) {
-                    $register->dumpReadable($content, NULL, $resourceFolder);
+
+                    $register->dumpReadable();
                 }
                 break;
         }
 
-
-        $register->registerResource($resourceType, $src, $position);
+        $register->registerResource($src);
     }
 
     protected function buildCompiledCSS(){
@@ -234,7 +210,7 @@ class ResourceManager {
         foreach($this->resourceEntities as $name => $resource){
 
             if($resource->isTypeLocal() && $resource->isCompileEnabled() && $resource->embedInHeader() &&  $resource->isStylesheet()){
-                $mergedHeaderResources->addResource($resource->getfileName(), $resource->getResourcePath() . '/', $resource->getRanking());
+                $mergedHeaderResources->addResourceEntity($resource);
             }
 
             if($resource->isTypeLocal() && $resource->isCompileEnabled() && $resource->embedInFooter() &&  $resource->isStylesheet()){
@@ -242,8 +218,9 @@ class ResourceManager {
             }
         }
 
-        $mergedHeaderResources->sortResources(true);
-        $output = $mergedHeaderResources->render();
+
+        $mergedHeaderResources->sortResourceEntities(true);
+        $output = $mergedHeaderResources->merge();
 
         return $output;
     }
@@ -258,20 +235,22 @@ class ResourceManager {
 
                 case 'Header':
                     if($resource->isCompileEnabled() && $resource->embedInHeader() &&  $resource->isJavascript()){
-                        $mergedHeaderResources->addResource($resource->getfileName(), $resource->getResourcePath() . '/', $resource->getRanking());
+                        //$mergedHeaderResources->addResource($resource->getfileName(), $resource->getResourcePath() . '/', $resource->getRanking());
+                        $mergedHeaderResources->addResourceEntity($resource);
                     }
                     break;
 
                 case 'Footer':
                     if($resource->isCompileEnabled() && $resource->embedInFooter() &&  $resource->isJavascript()){
-                        $mergedHeaderResources->addResource($resource->getfileName(), $resource->getResourcePath() . '/', $resource->getRanking());
+                        //$mergedHeaderResources->addResource($resource->getfileName(), $resource->getResourcePath() . '/', $resource->getRanking());
+                        $mergedHeaderResources->addResourceEntity($resource);
                     }
                     break;
             }
         }
 
-        $mergedHeaderResources->sortResources(true);
-        $output = $mergedHeaderResources->render();
+        $mergedHeaderResources->sortResourceEntities(true);
+        $output = $mergedHeaderResources->merge();
 
         return $output;
     }

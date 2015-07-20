@@ -7,6 +7,7 @@
  */
 
 namespace wpFlow\Core\Resource;
+use wpFlow\Core\Utilities\Debug;
 
 
 /**
@@ -73,11 +74,17 @@ class Resource {
     protected $compile;
 
     /**
-     * You can specify an expression which has to be true to enqueue the resource.
+     * You can specify an expression which can be anything call_user_function can call.
      * Only works when resource is not enabled for compiling.
-     * @var string
+     * @var string or array
      */
     protected $expression;
+
+    /**
+     * Optional Arguments für the Expressionfunction
+     * @var array
+     */
+    protected $arguments;
 
     /**
      * The Type of the ResourceFile. For example css for a stylesheet or js for a javascriptfile.
@@ -99,8 +106,15 @@ class Resource {
      */
     protected $publicURI;
 
+    /**
+     * The Sass Compiler Object. Called once in the ResourceManager and injected trough
+     * the factory.
+     * @var Object
+     */
+    protected $scss;
 
-    public function __construct($handle,$type, $fileName, $ranking,$position, $minify, $resourcePath, $content, $compile, $expression ){
+
+    public function __construct($handle,$type, $fileName, $ranking,$position, $minify, $resourcePath, $content, $compile, $expression, $arguments, $scss ){
         $this->handle = $handle;
         $this->type = $type;
         $this->fileName = $fileName;
@@ -111,13 +125,30 @@ class Resource {
         $this->content = ($this->minify) ? preg_replace(self::$strips, '', $content) : $content;
         $this->compile = $compile;
         $this->expression = $expression;
+        $this->arguments = $arguments;
+
+        $this->scss = $scss;
 
         $this->fileType = pathinfo($this->fileName, PATHINFO_EXTENSION);
+
+        if($this->fileType == 'scss'){
+            $this->fileName = pathinfo($this->fileName, PATHINFO_FILENAME) . '.css';
+            $this->fileType = "css";
+
+            //compile the sass content to css
+            if($this->isMinify()){
+                $this->scss->setFormatter('scss_formatter_compressed');
+            }
+            $this->scss->addImportPath($this->resourcePath);
+            $this->content = $this->scss->compile($this->content);
+
+        }
 
         if ($this->type === 'local' || 'localCDN') {
             $this->publicPath = get_template_directory() . '/' . $this->fileType . '/' . $this->fileName;
             $this->publicURI = get_template_directory_uri() . '/' . $this->fileType . '/' . $this->fileName;
         }
+
     }
 
     /**
@@ -285,6 +316,14 @@ class Resource {
     public function getPublicURI()
     {
         return $this->publicURI;
+    }
+
+    /**
+     * @return array
+     */
+    public function getArguments()
+    {
+        return $this->arguments;
     }
 
 }

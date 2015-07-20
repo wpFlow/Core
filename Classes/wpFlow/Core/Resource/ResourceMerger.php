@@ -8,6 +8,7 @@
 
 namespace wpFlow\Core\Resource;
 use stdClass;
+use wpFlow\Core\Utilities\Debug;
 
 /**
  * ResourceMerger Class needed if you're looking for something to merge your resource files and output the data
@@ -18,6 +19,8 @@ class ResourceMerger {
     public $directory = '';
     // Array of loaded Resource files
     public $resource = array();
+    // Array of loaded Resource entities
+    public $resourceEntities = array();
     // In case of errors
     public $errors = array();
     // List of the things you want to strip
@@ -56,6 +59,16 @@ class ResourceMerger {
 
     }
 
+    public function addResourceEntity($resource){
+        $rankingKey = $resource->getRanking() . strtolower($resource->getHandle());
+
+        // Start an stdClass
+        $this->resourceEntities[$rankingKey] = new stdClass();
+
+        // Add filename to the file stdClass
+        $this->resourceEntities[$rankingKey]->content = $resource->getContent();
+    }
+
     /**
      * Remove a resource file from the queue
      * @param type $filename
@@ -69,6 +82,12 @@ class ResourceMerger {
     public function sortResources($boolean = true){
         if($boolean){
             ksort($this->resource);
+        }
+    }
+
+    public function sortResourceEntities($boolean = true){
+        if($boolean){
+            ksort($this->resourceEntities);
         }
     }
 
@@ -109,6 +128,16 @@ class ResourceMerger {
 
             // Return the output
             return $output;
+    }
+
+    public function merge(){
+        $output = '';
+        foreach ($this->resourceEntities as $resourceEntity) {
+
+            $output .= $resourceEntity->content;
+        }
+
+        return $output;
     }
 
 }

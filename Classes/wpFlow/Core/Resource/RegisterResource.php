@@ -15,62 +15,38 @@ use Symfony\Component\Filesystem\Filesystem;
 class RegisterResource {
 
     /**
-     * The Resourcename.
-     * @var string
+     * The Resource Entity - All you need here!
+     * @var object
      */
-    protected $handle;
-
-    /**
-     * The path to the public reachable folder where the new resource file will be created.
-     * @vars string
-     */
-    protected $publicPath;
-
-    /**
-     * The Filename of the Resource.
-     * @var string
-     */
-    protected $fileName;
-
-    /**
-     * The name of the public folder where the new resource file is resides.
-     * @var string
-     */
-    protected $fileTypeDirectory;
-
-    protected $src;
+    protected $resource;
 
 
-    public function __construct($handle, $fileName){
-        $this->handle = $handle;
-        $this->fileName = $fileName;
+    public function __construct($resource){
+        $this->resource = $resource;
     }
 
-    public function dumpReadable($content, $publicPath = NULL, $fileTypeDirectory = NULL){
-
-        (isset($publicPath)) ? $publicPath : $publicPath = get_template_directory() . $fileTypeDirectory;
+    public function dumpReadable(){
 
         $copy = new Filesystem();
-        $publicPathAndFilename = $publicPath . '/' .$this->fileName;
 
             try {
-                $copy->dumpFile($publicPathAndFilename, $content);
+                $copy->dumpFile($this->resource->getPublicPath(), $this->resource->getContent());
 
             } catch (IOExceptionInterface $e){
                 echo "An error occurred while writing your file!" . $e->getLine();
             }
     }
 
-    public function registerResource($resourceType, $src, $inFooter){
+    public function registerResource($src){
 
-        switch($resourceType){
+        switch($this->resource->getFileType()){
 
             case 'css':
-                wp_register_style($this->handle, $src, array(), WPFLOW_VERSION_BRANCH);
+                wp_register_style($this->resource->getHandle(), $src, array(), WPFLOW_VERSION_BRANCH);
                 break;
 
             case 'js':
-                wp_register_script($this->handle, $src, array(), WPFLOW_VERSION_BRANCH, $inFooter);
+                wp_register_script($this->resource->getHandle(), $src, array(), WPFLOW_VERSION_BRANCH, $this->resource->embedInFooter());
                 break;
         }
     }
