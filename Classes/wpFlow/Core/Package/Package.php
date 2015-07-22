@@ -10,8 +10,6 @@ namespace wpFlow\Core\Package;
 
 use wpFlow\Core\Bootstrap;
 use wpFlow\Core\Exception;
-use wpFlow\Core\Utilities\Arrays;
-use wpFlow\Core\Utilities\Debug;
 use wpFlow\Core\Utilities\Files;
 
 class Package implements \PackageInterface {
@@ -492,18 +490,15 @@ class Package implements \PackageInterface {
 
         foreach ($this->configFileConstraints as $constraint) {
 
-            $this->filteredConfigDirFiles[$constraint] = Files::readDirectory($this->getConfigurationPathByContext(), '.' . $constraint);
+            $this->filteredConfigDirFiles[$constraint] = Files::readDirectory($this->getConfigurationPath(), '.' . $constraint);
         }
     }
 
     protected function getConfigValues($fileName){
-        $context = $this->packageManager->getBootstrap()->getContext()->getContextString();
-        $cacheFile = WPFLOW_PATH_DATA . 'ConfigManagementCache/' . $context .'/'. $this->getPackageKey() .'Config.php';
+        //$context = $this->packageManager->getBootstrap()->getContext()->getContextString();
+        $cacheFile = WPFLOW_PATH_DATA . 'ConfigManagementCache/' . $this->getPackageKey() .'Config.php';
         $filePath = $this->getConfigurationPathByContext(). '/' . $fileName;
 
-        /**
-         * @todo: get data direct from configManager, instead from the cached file (only in dev and testing context)!
-         */
 
         $fileContent = unserialize(Files::getFileContents($cacheFile));
 
@@ -514,9 +509,9 @@ class Package implements \PackageInterface {
     }
 
     protected function ensurePackageConfigEnvironment(){
-        if (!is_dir($this->getConfigurationPathByContext()) && !is_link($this->getConfigurationPathByContext())) {
-            if (!@mkdir($this->getConfigurationPathByContext())) {
-                echo('wpFlow could not create the directory "' . $this->getConfigurationPathByContext() . '". Please check the file permissions manually. (Error #1347526552)');
+        if (!is_dir($this->getConfigurationPath()) && !is_link($this->getConfigurationPath())) {
+            if (!@mkdir($this->getConfigurationPath())) {
+                echo('wpFlow could not create the directory "' . $this->getConfigurationPath() . '". Please check the file permissions manually. (Error #1347526552)');
                 exit(1);
             }
         }

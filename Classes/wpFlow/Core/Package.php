@@ -8,7 +8,6 @@
 
 namespace wpFlow\Core;
 
-use wpFlow\Configuration\Config\ConfigManager;
 use wpFlow\Core\Package\Package as BasePackage;
 use wpFlow\Core\Utilities\Debug;
 

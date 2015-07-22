@@ -79,24 +79,24 @@ class ResourceManager {
 
         // embed the main compiled javascript file with the HEADER position
         $headerContent = $this->buildCompiledJS('Header');
-        $mainHeaderJS = $resourceFactory->create($handle = 'mainHeaderJS', $type = 'local', $fileName = 'mainHeader.js', $ranking = 1, $position = 'header', $minify = false, $resourcePath = '', $headerContent, $compile = false ,$expression = '');
+        $mainHeaderJS = $resourceFactory->create($handle = 'mainHeaderJS', $type = 'local', $fileName = 'mainHeader.js', $ranking = 10, $position = 'header', $minify = false, $resourcePath = '', $headerContent, $compile = false ,$expression = '');
 
         $this->registerResources($mainHeaderJS);
-        $this->enqueueScriptResources($mainHeaderJS->getHandle(), $expression = "is_page", $arguments = array());
+        $this->enqueueScriptResources($mainHeaderJS->getHandle());
 
         // embed the main compiled javascript file with the FOOTER position
         $footerContent = $this->buildCompiledJS('Footer');
-        $mainFooterJS = $resourceFactory->create($handle = 'mainFooterJS', $type = 'local', $fileName = 'mainFooter.js', $ranking = 1, $position = 'footer', $minify = false, $resourcePath = '', $footerContent, $compile = false ,$expression = '');
+        $mainFooterJS = $resourceFactory->create($handle = 'mainFooterJS', $type = 'local', $fileName = 'mainFooter.js', $ranking = 10, $position = 'footer', $minify = false, $resourcePath = '', $footerContent, $compile = false ,$expression = '');
 
         $this->registerResources($mainFooterJS);
-        $this->enqueueScriptResources($mainFooterJS->getHandle(), $expression = "is_page", $arguments = array());
+        $this->enqueueScriptResources($mainFooterJS->getHandle());
 
         // embed the main compiled CSS file
         $cssContent = $this->buildCompiledCSS();
-        $mainCSS = $resourceFactory->create($handle = 'mainCSS', $type = 'local', $fileName = 'main.css', $ranking = 1, $position = 'header', $minify = false, $resourcePath = '', $cssContent, $compile = false ,$expression = '');
+        $mainCSS = $resourceFactory->create($handle = 'mainCSS', $type = 'local', $fileName = 'main.css', $ranking = 10, $position = 'header', $minify = false, $resourcePath = '', $cssContent, $compile = false ,$expression = '');
 
         $this->registerResources($mainCSS);
-        $this->enqueueStyleResources($mainCSS->getHandle(), $expression = "is_page", $arguments = array());
+        $this->enqueueStyleResources($mainCSS->getHandle());
 
         $sortedJS = $this->sortAndFilterResourceEntitiesByRanking('js');
 
@@ -146,21 +146,26 @@ class ResourceManager {
 
     }
 
-    protected function enqueueStyleResources($handle, $expression = NULL, $args){
+    protected function enqueueStyleResources($handle){
+
+        wp_enqueue_style($handle);
+
+        /*
 
         switch(isset($expression)){
 
             case true:
                 if(call_user_func_array($expression, $args)){
+
                     wp_enqueue_style($handle);
                 }
                 break;
 
             case false:
-                dump('BINGO');
                 wp_enqueue_style($handle);
                 break;
         }
+        */
     }
 
     protected function enqueueScriptResources($handle, $expression = NULL){
@@ -218,7 +223,6 @@ class ResourceManager {
             }
         }
 
-
         $mergedHeaderResources->sortResourceEntities(true);
         $output = $mergedHeaderResources->merge();
 
@@ -235,14 +239,12 @@ class ResourceManager {
 
                 case 'Header':
                     if($resource->isCompileEnabled() && $resource->embedInHeader() &&  $resource->isJavascript()){
-                        //$mergedHeaderResources->addResource($resource->getfileName(), $resource->getResourcePath() . '/', $resource->getRanking());
                         $mergedHeaderResources->addResourceEntity($resource);
                     }
                     break;
 
                 case 'Footer':
                     if($resource->isCompileEnabled() && $resource->embedInFooter() &&  $resource->isJavascript()){
-                        //$mergedHeaderResources->addResource($resource->getfileName(), $resource->getResourcePath() . '/', $resource->getRanking());
                         $mergedHeaderResources->addResourceEntity($resource);
                     }
                     break;

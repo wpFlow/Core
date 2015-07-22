@@ -2,7 +2,7 @@
 use wpFlow\Core\Bootstrap;
 
     /*                                                                        *
-     * This script belongs to the TYPO3 Flow framework.                       *
+     * This script belongs to the wpFlow framework.                       *
      *                                                                        *
      * It is free software; you can redistribute it and/or modify it under    *
      * the terms of the GNU Lesser General Public License, either version 3   *
@@ -13,9 +13,8 @@ use wpFlow\Core\Bootstrap;
 
 
 /**
- * Interface for a Flow Package class
+ * Interface for a wpFlow Package class
  *
- * @api
  */
 interface PackageInterface {
 

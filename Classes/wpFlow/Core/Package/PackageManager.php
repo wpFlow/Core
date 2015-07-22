@@ -100,10 +100,7 @@ class PackageManager implements PackageManagerInterface
         $this->packageStatesCache = new ConfigCache($this->packageStatesPathAndFilename, false);
         $this->loadPackageStates();
 
-        //set up all active packages to the bootstrap class for further use
-        $this->bootstrap->setPackages($this->activePackages);
-
-        //deliver an anstance of this packageManager to the bootsptrap
+        //deliver an instance of this packageManager to the bootstrap
         $this->bootstrap->setPackageManager($this);
 
         $this->activePackages = array();
@@ -112,6 +109,8 @@ class PackageManager implements PackageManagerInterface
                 $this->activePackages[$packageKey] = $package;
             }
         }
+        //set up all active packages to the bootstrap class for further use
+        $this->bootstrap->setPackages($this->activePackages);
 
         //initialize the config Manager
         $configManager = new ConfigManager();
@@ -172,6 +171,11 @@ class PackageManager implements PackageManagerInterface
                     $this->composerNameToPackageKeyMap[strtolower($composerManifest->name)] = $packageKey;
                     $this->packageStatesConfiguration['packages'][$packageKey]['manifestPath'] = substr($composerManifestPath, strlen($packagePath)) ?: '';
                     $this->packageStatesConfiguration['packages'][$packageKey]['composerName'] = $composerManifest->name;
+
+                    $composerManifestArray = (array) $composerManifest->require;
+                    unset($composerManifestArray['php']);
+
+                    $this->packageStatesConfiguration['packages'][$packageKey]['dependencies'] =  array_keys($composerManifestArray ,0);
                 } catch (Exception $exception) {
                     $relativePackagePath = substr($packagePath, strlen($this->packagesBasePath));
                     $packageKey = substr($relativePackagePath, strpos($relativePackagePath, '/') + 1, -1);
@@ -190,7 +194,7 @@ class PackageManager implements PackageManagerInterface
             }
         }
 
-        $this->registerPackagesFromConfiguration();
+        $this->registerPackagesFromConfiguration(true);
         if ($this->packageStatesConfiguration != $previousPackageStatesConfiguration) {
             $this->sortAndSavePackageStates();
         }
@@ -494,7 +498,7 @@ class PackageManager implements PackageManagerInterface
      * @return void
      * @throws Exception
      */
-    protected function registerPackagesFromConfiguration() {
+    protected function registerPackagesFromConfiguration($sortAndSafe) {
         foreach ($this->packageStatesConfiguration['packages'] as $packageKey => $stateConfiguration) {
 
             $packagePath = isset($stateConfiguration['packagePath']) ? $stateConfiguration['packagePath'] : NULL;
@@ -504,12 +508,12 @@ class PackageManager implements PackageManagerInterface
             try {
                 $package = $this->packageFactory->create($this->packagesBasePath, $packagePath, $packageKey, $classesPath, $manifestPath);
             } catch (Exception $exception) {
-               // $this->unregisterPackageByPackageKey($packageKey);
+               $this->unregisterPackageByPackageKey($packageKey);
                 continue;
             }
 
             //add the created packages to $this->packages[$packageKey]
-            $this->registerPackage($package);
+            $this->registerPackage($package, $sortAndSafe);
 
 
             if (!$this->packages[$packageKey] instanceof PackageInterface) {
@@ -560,7 +564,7 @@ class PackageManager implements PackageManagerInterface
      * @throws Exception
      */
     protected function sortAndSavePackageStates() {
-        //$this->sortAvailablePackagesByDependencies();
+        $this->sortAvailablePackagesByDependencies();
 
         $this->packageStatesConfiguration['version'] = 4;
 
@@ -590,8 +594,9 @@ class PackageManager implements PackageManagerInterface
         }
         if ($this->packageStatesConfiguration === array() || $this->bootstrap->getContext()->isDevelopment() || $this->bootstrap->getContext()->isTesting()) {
             $this->scanAvailablePackages();
+
         } else {
-            $this->registerPackagesFromConfiguration();
+            $this->registerPackagesFromConfiguration($sortAndSafe = false);
         }
     }
 
@@ -611,40 +616,17 @@ class PackageManager implements PackageManagerInterface
      * @return void
      */
     protected function sortAvailablePackagesByDependencies() {
-        $sortedPackages = array();
-        $unsortedPackages = array_fill_keys(array_keys($this->packages), 0);
 
-        while (!empty($unsortedPackages)) {
-            reset($unsortedPackages);
-            $this->sortPackagesByDependencies(key($unsortedPackages), $sortedPackages, $unsortedPackages);
-        }
+        uasort($this->packageStatesConfiguration['packages'], array($this, 'sortDependencies'));
 
-        $this->packages = $sortedPackages;
-
-        $packageStatesConfiguration = array();
-        foreach ($sortedPackages as $packageKey => $package) {
-            $packageStatesConfiguration[$packageKey] = $this->packageStatesConfiguration['packages'][$packageKey];
-        }
-        $this->packageStatesConfiguration['packages'] = $packageStatesConfiguration;
     }
 
-    /**
-     * Recursively sort dependencies of a package. This is a depth-first approach that recursively
-     * adds all dependent packages to the sorted list before adding the given package. Visited
-     * packages are flagged to break up cyclic dependencies.
-     *
-     * @param string $packageKey Package key to process
-     * @param array $sortedPackages Array to sort packages into
-     * @param array $unsortedPackages Array with state information of still unsorted packages
-     */
-    protected function sortPackagesByDependencies($packageKey, array &$sortedPackages, array &$unsortedPackages) {
-        if ($unsortedPackages[$packageKey] === 0) {
-            $package = $this->packages[$packageKey];
-            $unsortedPackages[$packageKey] = 1;
+    protected function sortDependencies($a, $b){
+        if ( is_array($b['dependencies']) && in_array($a['composerName'], $b['dependencies'])) return -1;
 
-            unset($unsortedPackages[$packageKey]);
-            $sortedPackages[$packageKey] = $package;
-        }
+        if ( $a['composerName'] == $b['dependencies'] ) return -1;
+
+        return 1;
     }
 
     /**
