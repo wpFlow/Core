@@ -191,4 +191,7 @@ interface PackageManagerInterface {
      */
     public function deletePackage($packageKey);
 
+
+    public function getPackagesConfigValues($FileName);
+
 }

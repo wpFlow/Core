@@ -9,16 +9,12 @@
 namespace wpFlow\Core\Package;
 
 
-use DateTime;
 use PackageInterface;
 use Symfony\Component\Config\ConfigCache;
-use Symfony\Component\Config\Resource\FileResource;
 use wpFlow\Configuration\Config\ConfigManager;
-use wpFlow\Core\Booting\Scripts;
 use wpFlow\Core\Bootstrap;
 use wpFlow\Core\Exception;
 use wpFlow\Core\Resource\ResourceManager;
-use wpFlow\Core\Utilities\Debug;
 use wpFlow\Core\Utilities\Files;
 
 
@@ -85,6 +81,7 @@ class PackageManager implements PackageManagerInterface
      */
     protected $packageStatesCache;
 
+    protected $configManagementEnabledPackages;
 
     /**
      * Initializes the package manager
@@ -112,18 +109,13 @@ class PackageManager implements PackageManagerInterface
         //set up all active packages to the bootstrap class for further use
         $this->bootstrap->setPackages($this->activePackages);
 
-        //initialize the config Manager
-        $configManager = new ConfigManager();
-        $configManager->initialize($this->activePackages, $this->bootstrap);
-
-        $this->bootConfigDefaults();
-
-        //initialize the Resource Manager
-        $resourceManager = new ResourceManager();
-        $resourceManager->initialize($this->activePackages, $this->bootstrap);
+        foreach ($this->activePackages as $activePackage){
+            if($activePackage->isConfigManagementEnabled()){
+                $this->configManagementEnabledPackages[$activePackage->getPackageKey()] = $activePackage;
+            }
+        }
 
         $this->bootPackages();
-
     }
 
     protected function bootPackages(){
@@ -132,18 +124,17 @@ class PackageManager implements PackageManagerInterface
         }
     }
 
-    protected function bootConfigDefaults(){
-        foreach ($this->activePackages as $package) {
-            $package->setConfigDefaults();
+    public function getPackagesConfigValues($FileName){
+        foreach($this->configManagementEnabledPackages as $package){
+
+            $return[$package->getPackageKey()] = $package->getConfigValues($FileName);
         }
+
+        return $return;
     }
-
-
 
     protected function scanAvailablePackages()
     {
-        $previousPackageStatesConfiguration = $this->packageStatesConfiguration;
-
         if (isset($this->packageStatesConfiguration['packages'])) {
             foreach ($this->packageStatesConfiguration['packages'] as $packageKey => $configuration) {
                 if (!file_exists($this->packagesBasePath . $configuration['packagePath'])) {
@@ -195,9 +186,6 @@ class PackageManager implements PackageManagerInterface
         }
 
         $this->registerPackagesFromConfiguration(true);
-        if ($this->packageStatesConfiguration != $previousPackageStatesConfiguration) {
-            $this->sortAndSavePackageStates();
-        }
     }
 
     /**
@@ -313,7 +301,6 @@ class PackageManager implements PackageManagerInterface
         if (!isset($this->packageStatesConfiguration['packages'][$packageKey]['classesPath'])) {
             $this->packageStatesConfiguration['packages'][$packageKey]['classesPath'] = Package::DIRECTORY_CLASSES;
         }
-        $this->sortAndSavePackageStates();
     }
 
     /**
@@ -429,7 +416,7 @@ class PackageManager implements PackageManagerInterface
      */
     public function getActivePackages()
     {
-        // TODO: Implement getActivePackages() method.
+        return $this->activePackages;
     }
 
     /**
@@ -498,7 +485,12 @@ class PackageManager implements PackageManagerInterface
      * @return void
      * @throws Exception
      */
-    protected function registerPackagesFromConfiguration($sortAndSafe) {
+    protected function registerPackagesFromConfiguration($sortAndSafe = TRUE) {
+
+        if ($sortAndSafe === TRUE) {
+            $this->sortAndSavePackageStates();
+        }
+
         foreach ($this->packageStatesConfiguration['packages'] as $packageKey => $stateConfiguration) {
 
             $packagePath = isset($stateConfiguration['packagePath']) ? $stateConfiguration['packagePath'] : NULL;
@@ -508,12 +500,12 @@ class PackageManager implements PackageManagerInterface
             try {
                 $package = $this->packageFactory->create($this->packagesBasePath, $packagePath, $packageKey, $classesPath, $manifestPath);
             } catch (Exception $exception) {
-               $this->unregisterPackageByPackageKey($packageKey);
+               //$this->unregisterPackageByPackageKey($packageKey);
                 continue;
             }
 
             //add the created packages to $this->packages[$packageKey]
-            $this->registerPackage($package, $sortAndSafe);
+            $this->registerPackage($package);
 
 
             if (!$this->packages[$packageKey] instanceof PackageInterface) {
@@ -526,7 +518,6 @@ class PackageManager implements PackageManagerInterface
             }
         }
 
-
     }
 
     /**
@@ -537,7 +528,7 @@ class PackageManager implements PackageManagerInterface
      * @return PackageInterface
      * @throws Exception
      */
-    public function registerPackage(PackageInterface $package, $sortAndSave = TRUE) {
+    public function registerPackage(PackageInterface $package) {
         $packageKey = $package->getPackageKey();
         $caseSensitivePackageKey = $this->getCaseSensitivePackageKey($packageKey);
         if ($this->isPackageAvailable($caseSensitivePackageKey)) {
@@ -548,9 +539,6 @@ class PackageManager implements PackageManagerInterface
         $this->packageStatesConfiguration['packages'][$packageKey]['packagePath'] = str_replace($this->packagesBasePath, '', $package->getPackagePath());
         $this->packageStatesConfiguration['packages'][$packageKey]['classesPath'] = str_replace($package->getPackagePath(), '', $package->getClassesPath());
 
-        if ($sortAndSave === TRUE) {
-            $this->sortAndSavePackageStates();
-        }
 
         return $package;
        }
@@ -592,7 +580,7 @@ class PackageManager implements PackageManagerInterface
         if (!isset($this->packageStatesConfiguration['version']) || $this->packageStatesConfiguration['version'] < 4) {
             $this->packageStatesConfiguration = array();
         }
-        if ($this->packageStatesConfiguration === array() || $this->bootstrap->getContext()->isDevelopment() || $this->bootstrap->getContext()->isTesting()) {
+        if ($this->packageStatesConfiguration === array()) {
             $this->scanAvailablePackages();
 
         } else {

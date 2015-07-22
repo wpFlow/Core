@@ -133,6 +133,8 @@ interface PackageInterface {
 
     public function setConfigManagement($configManagementEnabled);
 
+    public function getConfigValues($fileName);
+
 
 
 

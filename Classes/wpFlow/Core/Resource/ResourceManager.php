@@ -9,6 +9,7 @@
 namespace wpFlow\Core\Resource;
 
 
+use Symfony\Component\Filesystem\Filesystem;
 use wpFlow\Core\Bootstrap;
 use wpFlow\Core\Exception;
 use wpFlow\Core\Utilities\Debug;
@@ -21,6 +22,7 @@ class ResourceManager {
     const STYLESHEETS = 'css';
     const SASSSTYLESHEETS = 'scss';
     const IMAGES = 'img';
+    const FONTS = 'Fonts';
 
     protected $bootstrap;
     protected $activePackages;
@@ -28,9 +30,11 @@ class ResourceManager {
     protected $registeredResources;
     protected $resourceEntities = array();
 
-    public function initialize($activePackages, Bootstrap $bootstrap){
+    public function initialize($registeredResources, $activePackages, Bootstrap $bootstrap){
         $this->bootstrap = $bootstrap;
         $this->activePackages = $activePackages;
+        $this->registeredResources = $registeredResources;
+
 
         // filter active packages by ConfigManagement flag
         foreach ($this->activePackages as $activePackage){
@@ -46,10 +50,13 @@ class ResourceManager {
         $scss = new \scssc();
 
         foreach($packages as $package){
-            $this->registeredResources[$package->getPackageKey()] = $package->getResources();
+
             $path = $package->getResourcesPath() . self::PUBLICFOLDER;
 
-            $registeredResources = $this->registeredResources[$package->getPackageKey()]['Public'];
+            $this->mirrorImageResources($path);
+            $this->mirrorFontResources($path);
+
+            $registeredResources = $this->registeredResources[$package->getPackageKey()][$package->getPackageKey()]['Public'];
 
             if(!$registeredResources == NULL) {
                 $this->resolveResourceType($registeredResources, $path, $package->getPackageKey());
@@ -117,6 +124,25 @@ class ResourceManager {
         }
     }
 
+    protected function mirrorImageResources($source){
+
+        $sourcePath = $source . '/' . self::IMAGES;
+        $target = get_template_directory() . '/' . self::IMAGES;
+
+        if(is_dir($sourcePath)){
+            Files::copyDirectoryRecursively($sourcePath, $target, $keepExistingFiles = TRUE);
+        };
+    }
+
+    protected function mirrorFontResources($source){
+        $sourcePath = $source . '/' . self::FONTS;
+        $target = get_template_directory() . '/' . self::FONTS;
+
+        if(is_dir($sourcePath)){
+            Files::copyDirectoryRecursively($sourcePath, $target);
+        };
+    }
+
     protected function sortAndFilterResourceEntitiesByRanking($filter){
 
         switch($filter){
@@ -170,6 +196,8 @@ class ResourceManager {
 
     protected function enqueueScriptResources($handle, $expression = NULL){
 
+        wp_enqueue_script($handle);
+         /*
         switch(isset($expression)){
 
             case true:
@@ -182,6 +210,7 @@ class ResourceManager {
                 wp_enqueue_script($handle);
                 break;
         }
+         */
     }
 
     protected function registerResources($resource){

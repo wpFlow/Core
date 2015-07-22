@@ -167,7 +167,6 @@ class Package implements \PackageInterface {
         }
 
         if($this->isConfigManagementEnabled()){
-           // $this->ensurePackageConfigEnvironment();
             $this->buildArrayOfConfigFiles();
         }
     }
@@ -494,12 +493,8 @@ class Package implements \PackageInterface {
         }
     }
 
-    protected function getConfigValues($fileName){
-        //$context = $this->packageManager->getBootstrap()->getContext()->getContextString();
+    public function getConfigValues($fileName){
         $cacheFile = WPFLOW_PATH_DATA . 'ConfigManagementCache/' . $this->getPackageKey() .'Config.php';
-        $filePath = $this->getConfigurationPathByContext(). '/' . $fileName;
-
-
         $fileContent = unserialize(Files::getFileContents($cacheFile));
 
         if(!$fileContent[$fileName] == NULL) {
