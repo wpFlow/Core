@@ -9,9 +9,10 @@
 namespace wpFlow\Core;
 
 use wpFlow\Configuration\Config\ConfigManager;
-use wpFlow\Core\Package\Package as BasePackage;
+use wpFlow\Configuration\Validation\ResourceConfiguration;
 use wpFlow\Core\Resource\ResourceManager;
 use wpFlow\Core\Utilities\Debug;
+use wpFlow\Core\Package\Package as BasePackage;
 
 class Package extends BasePackage {
 
@@ -19,32 +20,36 @@ class Package extends BasePackage {
      * @var boolean
      */
     protected $protected = TRUE;
-    protected $configManagementEnabled = true;
+    protected $configManagementEnabled = TRUE;
     protected $bootstrap;
+    protected $configManager;
+    protected $resourceManager;
 
 
     public function boot(Bootstrap $bootstrap){
         $this->bootstrap = $bootstrap;
         $activePackages = $this->packageManager->getActivePackages();
+        $configManagementEnabledPackages = $this->packageManager->getConfigManagementEnabledPackages();
+
+        $this->configManager = $bootstrap->registerDependency('configManager',new ConfigManager() );
+        $this->resourceManager = $bootstrap->registerDependency('resourceManager', new ResourceManager());
 
         //initialize the config Manager
-        $this->bootConfigManager($activePackages);
+        $this->bootConfigManager($configManagementEnabledPackages);
 
         //initialize the Resource Manager
         $this->bootResourceManager($activePackages);
 
     }
 
-    protected function bootConfigManager($activePackages){
-        $configManager = new ConfigManager();
-        $configManager->initialize($activePackages, $this->bootstrap);
+    protected function bootConfigManager($configManagementEnabledPackages){
+        $this->configManager->initialize($configManagementEnabledPackages, $this->bootstrap);
+        $this->configManager->addConfigValidation('Resources.yaml', new ResourceConfiguration());
     }
 
     protected function bootResourceManager($activePackages){
         $resources = $this->packageManager->getPackagesConfigValues('Resources.yaml');
-        $resourceManager = new ResourceManager();
-        $resourceManager->initialize($resources, $activePackages, $this->bootstrap);
+        $this->resourceManager->initialize($resources, $activePackages, $this->bootstrap);
     }
-
 
 }

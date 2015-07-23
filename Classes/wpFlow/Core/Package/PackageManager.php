@@ -609,6 +609,14 @@ class PackageManager implements PackageManagerInterface
 
     }
 
+    /**
+     * @return mixed
+     */
+    public function getConfigManagementEnabledPackages()
+    {
+        return $this->configManagementEnabledPackages;
+    }
+
     protected function sortDependencies($a, $b){
         if ( is_array($b['dependencies']) && in_array($a['composerName'], $b['dependencies'])) return -1;
 

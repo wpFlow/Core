@@ -10,6 +10,7 @@ namespace wpFlow\Configuration\Config;
 
 
 use Symfony\Component\Config\ConfigCache;
+use Symfony\Component\Config\Definition\ConfigurationInterface;
 use wpFlow\Configuration\ConfigLoader;
 use wpFlow\Configuration\Validation\ResourceConfiguration;
 use wpFlow\Core\Bootstrap;
@@ -28,7 +29,6 @@ class ConfigManager implements ConfigManagerInterface {
     /**
      * @var array of active Package objects
      */
-    protected $activePackages;
 
     protected $configCache;
 
@@ -38,6 +38,8 @@ class ConfigManager implements ConfigManagerInterface {
 
     protected $configFileContent;
 
+    protected $configValidation = array();
+
     /**
      * Array with all the ConfigManagementEnabled PackageKeys
      * @var array
@@ -45,25 +47,21 @@ class ConfigManager implements ConfigManagerInterface {
     protected $configManagementEnabledPackages;
 
 
-    public function initialize($activePackages, Bootstrap $bootstrap){
-        $this->activePackages = $activePackages;
+    public function initialize($configManagementEnabledPackages, Bootstrap $bootstrap){
+        $this->configManagementEnabledPackages = $configManagementEnabledPackages;
         $this->bootstrap = $bootstrap;
 
-        // filter active packages by ConfigManagement flag
-        foreach ($this->activePackages as $activePackage){
-            if($activePackage->isConfigManagementEnabled()){
-
-                $configManagementEnabledPackages[$activePackage->getPackageKey()] = $activePackage;
-            }
-        }
-        $this->configManagementEnabledPackages = $configManagementEnabledPackages;
-
-        $packages = $this->configManagementEnabledPackages;
+        //run the configfile processing
+        $this->run();
 
 
+    }
+
+    public function run(){
         if($this->bootstrap->getContext()->isDevelopment() || $this->bootstrap->getContext()->isTesting() || !is_dir(WPFLOW_PATH_DATA . 'ConfigManagementCache/Production') ){
-            // get all the Files for each configManagementEnabled Packages
-            foreach($packages as $packageKey => $package) {
+
+            // get all the Files for each configManagementEnabled Package
+            foreach($this->configManagementEnabledPackages as $packageKey => $package) {
                 if($package->getFilteredConfigDirFiles()) {
                     $configFileInfos[$packageKey] = Arrays::removeEmptyElementsRecursively($package->getFilteredConfigDirFiles());
                 }
@@ -88,11 +86,15 @@ class ConfigManager implements ConfigManagerInterface {
         }
     }
 
+    public function addConfigValidation($fileName, ConfigurationInterface $configuration ){
+        $this->configValidation[$fileName] = $configuration;
+        $this->run();
+    }
+
 
     protected function processConfigFiles(array $configFilesContent, $packageKey){
 
-        //$configValidations = $this->bootstrap->getConfigValidation();
-        $configValidations = array("Resources.yaml" => new ResourceConfiguration());
+        $configValidations = $this->configValidation;
 
         foreach($configValidations as $fileName => $configuration){
             $processor = new ProcessConfigurations($configuration);
@@ -108,6 +110,14 @@ class ConfigManager implements ConfigManagerInterface {
     protected function writeConfigFilesToCache($packageKey, $content) {
         $configCache = new ConfigCache(WPFLOW_PATH_DATA . 'ConfigManagementCache/' . $packageKey .'Config.php', true);
         $configCache->write(serialize($content));
+    }
+
+    /**
+     * @return array
+     */
+    public function getConfigValidation()
+    {
+        return $this->configValidation;
     }
 
 

@@ -26,13 +26,11 @@ class Bootstrap {
 
     protected $context;
 
-    protected $fileLocaterPath;
-
     protected $Packages;
 
-    protected $configValidation;
-
     protected $packageManager;
+
+    protected $dependencies = array();
 
 
     static public function boot($context)
@@ -65,28 +63,19 @@ class Bootstrap {
     }
 
     /**
-     * @return mixed
-     */
-    public function getConfigValidation()
-    {
-        return $this->configValidation;
-    }
-
-    /**
-     * @param $className
-     * @param $fileName
-     */
-    public function addConfigValidation($className, $fileName)
-    {
-        $this->configValidation[$fileName] = $className;
-    }
-
-    /**
      * @param mixed $packageManager
      */
     public function setPackageManager($packageManager)
     {
         $this->packageManager = $packageManager;
+    }
+
+    public function registerDependency($name, $dependency){
+        return $this->dependencies[$name] = $dependency;
+;    }
+
+    public function getDependency($name){
+        return $this->dependencies[$name];
     }
 
     /**
@@ -140,6 +129,7 @@ class Bootstrap {
      */
     public function run(){
         Scripts::initializePackageManagement($this);
+
     }
 
     /**
