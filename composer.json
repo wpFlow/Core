@@ -26,7 +26,7 @@
     "leafo/scssphp": "0.0.12"
   },
   "autoload": {
-    "psr-4": {
+    "psr-0": {
       "wpFlow\\Core": "Classes"
     }
   }
