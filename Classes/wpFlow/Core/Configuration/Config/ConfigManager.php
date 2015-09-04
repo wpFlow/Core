@@ -14,7 +14,10 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 use wpFlow\Configuration\ConfigLoader;
 use wpFlow\Configuration\Validation\ResourceConfiguration;
 use wpFlow\Core\Bootstrap;
+use wpFlow\Core\Exception;
 use wpFlow\Core\Utilities\Arrays;
+use wpFlow\Core\Utilities\Debug;
+use wpFlow\Core\Utilities\Yaml;
 
 
 class ConfigManager implements ConfigManagerInterface {
@@ -40,6 +43,8 @@ class ConfigManager implements ConfigManagerInterface {
 
     protected $configValidation = array();
 
+    protected $usePhpYamlExtension;
+
     /**
      * Array with all the ConfigManagementEnabled PackageKeys
      * @var array
@@ -51,9 +56,12 @@ class ConfigManager implements ConfigManagerInterface {
         $this->configManagementEnabledPackages = $configManagementEnabledPackages;
         $this->bootstrap = $bootstrap;
 
+        if (extension_loaded('yaml')) {
+            $this->usePhpYamlExtension = TRUE;
+        }
+
         //run the configfile processing
         $this->run();
-
 
     }
 
@@ -62,53 +70,90 @@ class ConfigManager implements ConfigManagerInterface {
 
             // get all the Files for each configManagementEnabled Package
             foreach($this->configManagementEnabledPackages as $packageKey => $package) {
-                if($package->getFilteredConfigDirFiles()) {
-                    $configFileInfos[$packageKey] = Arrays::removeEmptyElementsRecursively($package->getFilteredConfigDirFiles());
+                $configuration[$packageKey] = $package->getFilteredConfigDirFiles();
+
+                foreach($configuration[$packageKey] as $fileName => $filePath){
+                    $configContent[$fileName] = $this->YamlLoader($filePath);
+
+                    //this feels like a workaround but it works
+                    $targetFileName = explode('.', $fileName);
+
+                    if(count($targetFileName) == 3){
+                        unset($configContent[$fileName]);
+                    }
                 }
-                $configFileInfo = Arrays::removeEmptyElementsRecursively($configFileInfos);
             }
 
-            foreach($configFileInfo as $packageKey => $configFileType){
-                $content[$packageKey] = (array) new ConfigLoader($configFileType);
-            }
+            $processedData = $this->processConfigFiles($configContent);
 
-            foreach($content as $packageKey => $values) {
+            if($processedData !== NULL){
+                $mergedValues = array_replace($configContent, $processedData);
 
-                $processedData = $this->processConfigFiles($values, $packageKey);
+                $this->writeConfigFilesToCache($mergedValues);
 
-                if(!$processedData == NULL){
-                    $mergedValues = array_replace($values, $processedData);
-                    $this->writeConfigFilesToCache($packageKey, $mergedValues);
-                } else {
-                    $this->writeConfigFilesToCache($packageKey, $values);
-                }
+            } else {
+                $this->writeConfigFilesToCache($configContent);
             }
         }
     }
 
-    public function addConfigValidation($fileName, ConfigurationInterface $configuration ){
-        $this->configValidation[$fileName] = $configuration;
-        $this->run();
-    }
-
-
-    protected function processConfigFiles(array $configFilesContent, $packageKey){
+    protected function processConfigFiles(array $configFilesContent){
 
         $configValidations = $this->configValidation;
 
         foreach($configValidations as $fileName => $configuration){
+
             $processor = new ProcessConfigurations($configuration);
 
-            if(!$configFilesContent[$fileName] == NULL) {
-
-                $processedData[$fileName][$packageKey] = $processor->process($configFilesContent[$fileName][$packageKey]);
-                return $processedData;
-            }
+            $processedData[$fileName] = $processor->process($configFilesContent[$fileName]);
         }
+
+        return $processedData;
     }
 
-    protected function writeConfigFilesToCache($packageKey, $content) {
-        $configCache = new ConfigCache(WPFLOW_PATH_DATA . 'ConfigManagementCache/' . $packageKey .'Config.php', true);
+    protected function YamlLoader($filePath, $allowSplitSource = TRUE){
+
+        $pathAndFilename = pathinfo($filePath)['dirname'] . '/' .pathinfo($filePath)['filename'];
+
+        $pathsAndFileNames = array($pathAndFilename . '.yaml');
+        if ($allowSplitSource === TRUE) {
+            $splitSourcePathsAndFileNames = glob($pathAndFilename . '.*.yaml');
+            if ($splitSourcePathsAndFileNames !== FALSE) {
+                sort($splitSourcePathsAndFileNames);
+                $pathsAndFileNames = array_merge($pathsAndFileNames, $splitSourcePathsAndFileNames);
+            }
+        }
+        $configuration = array();
+        foreach ($pathsAndFileNames as $pathAndFilename) {
+            if (file_exists($pathAndFilename)) {
+                try {
+                    if ($this->usePhpYamlExtension) {
+                        $loadedConfiguration = @yaml_parse_file($pathAndFilename);
+                        if ($loadedConfiguration === FALSE) {
+                            throw new Exception('A parse error occurred while parsing file "' . $pathAndFilename . '".', 1391894094);
+                        }
+                    } else {
+                        $loadedConfiguration = Yaml::parse($pathAndFilename);
+                    }
+                    if (is_array($loadedConfiguration)) {
+                        $configuration = Arrays::arrayMergeRecursiveOverrule($configuration, $loadedConfiguration);
+                    }
+                } catch (Exception $exception) {
+                    throw new Exception('A parse error occurred while parsing file "' . $pathAndFilename . '". Error message: ' . $exception->getMessage(), 1232014321);
+                }
+            }
+        }
+
+        return $configuration;
+    }
+
+    public function addConfigValidation($fileName, ConfigurationInterface $configuration){
+        $this->configValidation[$fileName] = $configuration;
+    }
+
+
+    protected function writeConfigFilesToCache($content) {
+        $configCache = new ConfigCache(WPFLOW_PATH_DATA . 'ConfigManagementCache/Config.php', true);
         $configCache->write(serialize($content));
     }
 

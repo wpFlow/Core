@@ -177,8 +177,7 @@ class ApplicationConfiguration {
 
             //load the Config.yaml file
             if(file_exists($configCacheFile)){
-                $rawYamlContent = Files::getFileContents($configCacheFile);
-                $configYaml = Yaml::parse($rawYamlContent);
+                $configYaml = Yaml::parse($configCacheFile);
 
             } else throw new \wpFlow\Core\Exception("There was no Config.yaml File found in the $applicationContext configuration directory");
 

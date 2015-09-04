@@ -9,6 +9,7 @@
 namespace wpFlow\Core\Package;
 
 
+use Core\Utilities\SingleConfiguration;
 use PackageInterface;
 use Symfony\Component\Config\ConfigCache;
 use wpFlow\Configuration\Config\ConfigManager;
@@ -83,6 +84,8 @@ class PackageManager implements PackageManagerInterface
 
     protected $configManagementEnabledPackages;
 
+    protected $packageConfiguration;
+
     /**
      * Initializes the package manager
      *
@@ -95,6 +98,11 @@ class PackageManager implements PackageManagerInterface
         $this->packageStatesPathAndFilename = $this->packageStatesPathAndFilename ?: WPFLOW_PATH_DATA . 'PackageCache/PackageStates.php';
         $this->packageFactory = new PackageFactory($this);
         $this->packageStatesCache = new ConfigCache($this->packageStatesPathAndFilename, false);
+        $context = $this->bootstrap->getContext();
+        $yamlPathAndFileName = WPFLOW_PATH_CONFIGURATION . 'Package.yaml';
+        $this->packageConfiguration = new SingleConfiguration($context,$yamlPathAndFileName);
+
+
         $this->loadPackageStates();
 
         //deliver an instance of this packageManager to the bootstrap
@@ -116,6 +124,7 @@ class PackageManager implements PackageManagerInterface
         }
 
         $this->bootPackages();
+        $this->runPackages();
     }
 
     protected function bootPackages(){
@@ -124,13 +133,10 @@ class PackageManager implements PackageManagerInterface
         }
     }
 
-    public function getPackagesConfigValues($FileName){
-        foreach($this->configManagementEnabledPackages as $package){
-
-            $return[$package->getPackageKey()] = $package->getConfigValues($FileName);
+    protected function runPackages(){
+        foreach ($this->activePackages as $package) {
+            $package->run();
         }
-
-        return $return;
     }
 
     protected function scanAvailablePackages()
@@ -552,7 +558,8 @@ class PackageManager implements PackageManagerInterface
      * @throws Exception
      */
     protected function sortAndSavePackageStates() {
-        $this->sortAvailablePackagesByDependencies();
+        //$this->sortAvailablePackagesByDependencies();
+        $this->sortAvalailablePackagesByConfiguration();
 
         $this->packageStatesConfiguration['version'] = 4;
 
@@ -566,6 +573,16 @@ class PackageManager implements PackageManagerInterface
         $packageStatesCode = "<?php\n$fileDescription\nreturn " . var_export($this->packageStatesConfiguration, TRUE) . ';';
 
         $this->packageStatesCache->write($packageStatesCode, array());
+
+    }
+
+    protected function sortAvalailablePackagesByConfiguration(){
+        $packageYamlContent = $this->packageConfiguration->load();
+
+        $newOrder = $packageYamlContent['Packages']['Global']['PackageOrder'];
+        $sortedPackages = array_replace(array_flip($newOrder), $this->packageStatesConfiguration['packages']);
+
+        $this->packageStatesConfiguration['packages'] = $sortedPackages;
 
     }
 
@@ -609,6 +626,14 @@ class PackageManager implements PackageManagerInterface
 
     }
 
+    protected function sortDependencies($a, $b){
+        if ( is_array($b['dependencies']) && in_array($a['composerName'], $b['dependencies'])) return -1;
+
+        if ( $a['composerName'] == $b['dependencies'] ) return -1;
+
+        return 1;
+    }
+
     /**
      * @return mixed
      */
@@ -617,13 +642,7 @@ class PackageManager implements PackageManagerInterface
         return $this->configManagementEnabledPackages;
     }
 
-    protected function sortDependencies($a, $b){
-        if ( is_array($b['dependencies']) && in_array($a['composerName'], $b['dependencies'])) return -1;
 
-        if ( $a['composerName'] == $b['dependencies'] ) return -1;
-
-        return 1;
-    }
 
     /**
      * Create a new package, given the package key

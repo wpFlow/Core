@@ -10,7 +10,9 @@ namespace wpFlow\Core\Utilities;
 use Symfony\Component\Yaml\Yaml as SymfonyYaml;
 
 class Yaml {
-    public static function parse($rawYamlContent){
+    public static function parse($yamlPathAndFileName){
+
+        $rawYamlContent = Files::getFileContents($yamlPathAndFileName);
         return  SymfonyYaml::parse($rawYamlContent);
 
     }

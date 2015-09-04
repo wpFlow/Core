@@ -148,13 +148,13 @@ class Arrays {
      * Returns the value of a nested array by following the specifed path.
      *
      * @param array &$array The array to traverse as a reference
-     * @param array|string $path The path to follow. Either a simple array of keys or a string in the format 'foo/bar/baz'
+     * @param array|string $path The path to follow. Either a simple array of keys or a string in the format 'foo.bar.baz'
      * @return mixed The value found, NULL if the path didn't exist (note there is no way to distinguish between a found NULL value and "path not found")
      * @throws \InvalidArgumentException
      */
     static public function getValueByPath(array &$array, $path) {
         if (is_string($path)) {
-            $path = explode('/', $path);
+            $path = explode('.', $path);
         } elseif (!is_array($path)) {
             throw new \InvalidArgumentException('getValueByPath() expects $path to be string or array, "' . gettype($path) . '" given.', 1304950007);
         }

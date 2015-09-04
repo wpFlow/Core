@@ -35,7 +35,6 @@ class ResourceManager {
         $this->activePackages = $activePackages;
         $this->registeredResources = $registeredResources;
 
-
         // filter active packages by ConfigManagement flag
         foreach ($this->activePackages as $activePackage){
             if($activePackage->isConfigManagementEnabled()){
@@ -56,10 +55,12 @@ class ResourceManager {
             $this->mirrorImageResources($path);
             $this->mirrorFontResources($path);
 
-            $registeredResources = $this->registeredResources[$package->getPackageKey()][$package->getPackageKey()]['Public'];
+            $registeredResources = $this->registeredResources['Public'];
+
 
             if(!$registeredResources == NULL) {
                 $this->resolveResourceType($registeredResources, $path, $package->getPackageKey());
+
                 $this->resolvePathByType($path,$this->registeredResources[$package->getPackageKey()]['Public'] ,$package->getPackageKey());
 
                 // load the resource file content into the array
@@ -74,10 +75,10 @@ class ResourceManager {
                     $position = $values['Position'];
                     $minify = $values['Minify'];
                     $resourcePath = $values['Path'];
-                    $content = $values['Content'];
+                    (isset($values['Content'])) ? $content = $values['Content'] : $content = NULL;
                     $compile = $values['Compile'];
-                    $expression = $values['Options']['Expression'];
-                    $arguments = $values['Options']['Arguments'];
+                    $expression = NULL;
+                    $arguments = NULL;
 
                     $this->resourceEntities[$handleName] = $resourceFactory->create($handleName, $type, $fileName, $ranking, $position, $minify, $resourcePath, $content, $compile, $expression,$arguments ,$scss);
                 }
@@ -297,10 +298,12 @@ class ResourceManager {
                     $path = $resources[$handle]['Path'];
                     $file = $resources[$handle]['Filename'];
 
+
                     // check is the file exists
-                    $this->isResourceAvailable($path, $file);
-                    $content = Files::getFileContents($path . '/' . $file);
-                    $resources[$handle]['Content'] = $content;
+                    if($this->isResourceAvailable($path, $file)) {
+                        $content = Files::getFileContents($path . '/' . $file);
+                        $resources[$handle]['Content'] = $content;
+                    }
                     break;
 
                 case 'localCDN':
@@ -403,8 +406,17 @@ class ResourceManager {
      * @return bool
      */
     protected function isResourceAvailable($path, $file){
-        if(!file_exists($path.'/'.$file)){
-            echo "The <strong style='color: red'>$file</strong> File you registered could not be found in the resource dir!" . '</br>' ;
+        if(file_exists($path.'/'.$file)){
+            return true;
         }
+    }
+
+    public function getResourceByHandle($handle){
+
+        if(isset($this->resourceEntities[$handle])){
+            return $this->resourceEntities[$handle];
+        } else throw new Exception('No Resource was registered with this Name');
+
+
     }
 }

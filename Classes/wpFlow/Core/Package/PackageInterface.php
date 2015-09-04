@@ -36,6 +36,8 @@ interface PackageInterface {
      */
     public function boot(Bootstrap $bootstrap);
 
+    public function run();
+
     public function setConfigDefaults();
 
     /**

@@ -70,11 +70,13 @@ class Bootstrap {
         $this->packageManager = $packageManager;
     }
 
-    public function registerDependency($name, $dependency){
-        return $this->dependencies[$name] = $dependency;
+    public function registerDependency($name, $dependency, $args = array()){
+
+        $reflectionClass = new \ReflectionClass($dependency);
+        return $this->dependencies[$name] = $reflectionClass->newInstanceArgs($args);
 ;    }
 
-    public function getDependency($name){
+    public function injectDependency($name){
         return $this->dependencies[$name];
     }
 

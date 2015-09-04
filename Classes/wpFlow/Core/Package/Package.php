@@ -10,6 +10,7 @@ namespace wpFlow\Core\Package;
 
 use wpFlow\Core\Bootstrap;
 use wpFlow\Core\Exception;
+use wpFlow\Core\Utilities\Debug;
 use wpFlow\Core\Utilities\Files;
 
 class Package implements \PackageInterface {
@@ -108,13 +109,6 @@ class Package implements \PackageInterface {
     protected $filteredConfigDirFiles = array();
 
     /**
-     * Only these filetypes are accepted i.e. yaml, yml, xml, php
-     * You can add more filetypes using the setter method
-     * @var array of strings
-     */
-    protected $configFileConstraints = array('yaml', 'yml');
-
-    /**
      * Array of Resource Registration Content (Content of Resources.yaml)
      * @var array
      */
@@ -178,6 +172,9 @@ class Package implements \PackageInterface {
      * @return void
      */
     public function boot(Bootstrap $bootstrap) {
+    }
+
+    public function run(){
     }
 
     public function setConfigDefaults() {
@@ -486,15 +483,11 @@ class Package implements \PackageInterface {
     }
 
     protected function buildArrayOfConfigFiles(){
-
-        foreach ($this->configFileConstraints as $constraint) {
-
-            $this->filteredConfigDirFiles[$constraint] = Files::readDirectory($this->getConfigurationPath(), '.' . $constraint);
-        }
+        $this->filteredConfigDirFiles = Files::readDirectory($this->getConfigurationPath());
     }
 
     public function getConfigValues($fileName){
-        $cacheFile = WPFLOW_PATH_DATA . 'ConfigManagementCache/' . $this->getPackageKey() .'Config.php';
+        $cacheFile = WPFLOW_PATH_DATA . 'ConfigManagementCache/Config.php';
         $fileContent = unserialize(Files::getFileContents($cacheFile));
 
         if(!$fileContent[$fileName] == NULL) {
