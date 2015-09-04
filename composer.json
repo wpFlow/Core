@@ -24,5 +24,10 @@
     "symfony/yaml": "2.7.0",
     "symfony/config": "2.7.0",
     "leafo/scssphp": "0.0.12"
+  },
+  "autoload": {
+    "psr-4": {
+      "wpFlow\\Core": "Classes"
+    }
   }
 }
